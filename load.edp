@@ -1,4 +1,9 @@
 load "myserver"
 
-myserver();
 
+// mesh Th=square(5,5);
+// fespace Vh(Th,P1);
+
+myresponse(200);
+// cout << uh[].min << " " << uh[].max << endl;
+myserver();
