@@ -92,7 +92,7 @@ function mydraw() {
     const w = 500;
     const h = 500;
     var draw = SVG('new_plot').size(w, h)
-    mesh_data.forEach(e => {
+    mesh_data.forEach((e,i) => {
         var polyline = draw.polygon([[e[0].x * w, e[0].y * h], [e[1].x * w, e[1].y * h], [e[2].x * w, e[2].y * h]])
         polyline.fill('none').stroke({ width: 1 })
     });
