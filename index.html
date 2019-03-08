@@ -29,7 +29,7 @@
             <div class="col-8">
                 <div id="dashboard_new" class="dashboard jumbotron">
                     <p>--output--</p>
-                    <div id="new_plot" style="transform: scaleY(-1);text-align: center" ></div>
+                    <div id="new_plot" style="text-align: center" ></div>
                 </div>
             </div>
             <div class="col-4">
@@ -45,8 +45,15 @@
 
                 </div>
 
-                <form id="result">
-
+                <form id="control" class="controlbox">
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="tri_index" checked>
+                        <label class="form-check-label" for="tri_index">index of triangles</label>
+                    </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="ver_index" checked>
+                        <label class="form-check-label" for="ver_index">index of vertices</label>
+                    </div>
                 </form>
 
             </div>
@@ -56,6 +63,8 @@
 </body>
 <script>
 var mesh_data;
+var draw = SVG('new_plot')
+
 $(document).ready(function () {    
 
     $.ajax({
@@ -70,20 +79,34 @@ $(document).ready(function () {
         console.log(xhr);
     })
 
+    $("#tri_index").change(function () {
+        mydraw();
+    });
+
     
     
 });
 
 function mydraw() {
-    const w = 500;
-    const h = 500;
-    var draw = SVG('new_plot')
+    const w = 1;
+    const h = -1;
+    draw.clear()
     $("#new_plot > svg").attr('height','');
-    draw.viewbox({ x: 0, y: 0, width: w, height: h })
+    draw.viewbox({ x: 0, y: 0, width: 1, height: 1 })
     mesh_data.forEach((e,i) => {
-        var polyline = draw.polygon([[e[0].x * w, e[0].y * h], [e[1].x * w, e[1].y * h], [e[2].x * w, e[2].y * h]])
-        polyline.fill('none').stroke({ width: 1 })
+        var polyline = draw.polygon([[e[0].x*w, e[0].y*h+1], [e[1].x*w, e[1].y*h+1], [e[2].x*w, e[2].y*h+1]])
+        polyline.fill('none').stroke({ width: 1/500 })
+        if ($("#tri_index").is(':checked')) {
+            var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h + 1)
+                .font({
+                    size: "0.02px",
+                    anchor: 'middle'
+                })
+        }  
+
+
     });
+    
 }
 
 
