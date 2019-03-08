@@ -1,0 +1,16 @@
+        body > .container {
+            padding-top: 5rem;
+        }
+
+        form {
+            padding-top: 10px;
+        }
+
+        .scheme {
+            padding-top: 0px;
+        }
+
+        .dashboard{
+            margin: 20px;
+            padding: 25px 25px;
+        }
