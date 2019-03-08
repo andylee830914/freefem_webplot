@@ -17,6 +17,7 @@ solve Poisson(u,v)
   = int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))
     - int2d(Th)(f*v) + on(1,u=0);
 
+// plot(Th,ps="Lshapemesh.ps");
 myresponse(u[],Th);
 
 // cout << uh[].min << " " << uh[].max << endl;

@@ -8,6 +8,8 @@
     <script src="js/popper.min.js"></script>
     <!-- <script src="js/Chart.bundle.min.js"></script> -->
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/svg.min.js"></script>
+
     <!-- <script async src="mathjax/MathJax.js"></script> -->
 
 
@@ -20,7 +22,7 @@
     <style>
         body>.container {
             min-height: 75rem;
-            padding-top: 5rem;
+            padding-top: 10rem;
         }
 
         form {
@@ -35,13 +37,13 @@
 
 <body>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a class="navbar-brand" href="#">FreeFem++</a>
     </nav>
     <main role="main" class="container">
         <div class="row">
             <div class="col-8">
                 <div id="dashboard_new">
-                    <canvas id="new_chart" width="450" height="300"></canvas>
+                    <div id="new_plot" style="transform: scaleY(-1);" ></div>
                 </div>
             </div>
             <div class="col-4">
@@ -66,5 +68,38 @@
     </main>
 
 </body>
+<script>
+var mesh_data;
+$(document).ready(function () {    
+
+    $.ajax({
+        url:'./mesh',
+        type: 'GET'
+    }).done((mesh)=>{
+        console.log(mesh);
+        mesh_data = mesh;
+        mydraw()
+    }).fail((xhr, status, error) =>{
+        console.log("Status: " + status + " Error: " + error);
+        console.log(xhr);
+    })
+
+    
+    
+});
+
+function mydraw() {
+    const w = 500;
+    const h = 500;
+    var draw = SVG('new_plot').size(w, h)
+    mesh_data.forEach(e => {
+        var polyline = draw.polygon([[e[0].x * w, e[0].y * h], [e[1].x * w, e[1].y * h], [e[2].x * w, e[2].y * h]])
+        polyline.fill('none').stroke({ width: 1 })
+    });
+}
+
+
+
+</script>
 
 </html>

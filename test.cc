@@ -1,5 +1,6 @@
 #include "httplib.h"
 #include <iostream>
+#include <sstream>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
@@ -10,10 +11,18 @@ using namespace std;
 // using namespace Fem2D;
 using namespace httplib;
 Server svr;
-
 double myserver(Stack stack)
 {
 
+
+
+    svr.set_base_dir("./static");
+    svr.Get("/", [](const Request &req, Response &res) {
+        ifstream ifs("index.html");
+        std::string hp_html((std::istreambuf_iterator<char>(ifs)),
+                            std::istreambuf_iterator<char>());
+        res.set_content(hp_html, "text/html");
+    });
     cout << "server started" << endl;
     svr.listen("localhost", 1234);
 
@@ -24,19 +33,35 @@ bool myresponse(    Stack stack,
                     KN<double> *const &u,
                     Fem2D::Mesh const * const &pTh)
 {
+    stringstream mesh_json;
     const Fem2D::Mesh &Th(*pTh);
-
+    mesh_json << "[" << endl;
     cout << "Th.nt = " << Th.nt  << endl;
     for(int i = 0; i < Th.nt; i++)
     {
         const int &v0 = Th(i, 0);
         const int &v1 = Th(i, 1);
         const int &v2 = Th(i, 2);
-        cout << Th(v0).x << Th(v0).y << u[0][v0] << endl;
+        mesh_json << "  [ {\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[0][v0] << "}" << endl;
+        mesh_json << "   ,{\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[0][v1] << "}" << endl;
+        mesh_json << "   ,{\"x\":" << Th(v2).x << ",\"y\":" << Th(v2).y << ",\"u\":" << u[0][v2] << "}]";
+        if (i != Th.nt-1) {
+            mesh_json << ",";
+        }
+        mesh_json << endl;
+        
     }
-    
+    mesh_json << "]" << endl;
+
+    string jsonstr;
+    jsonstr = mesh_json.str();
+
     svr.Get("/hi", [](const Request &req, Response &res) {
         res.set_content("<svg height=\"250\" width=\"500\"><polygon points=\"220,10 300,210 170,250 123,234\" style=\"fill:lime;stroke:purple;stroke-width:1\" />Sorry, your browser does not support inline SVG.</svg>", "text/html");
+    });
+
+    svr.Get("/mesh", [jsonstr](const Request &req, Response &res) {
+        res.set_content(jsonstr, "application/json");
     });
 
     svr.Get(R"(/hello/(\d+))", [](const Request &req, Response &res) {
