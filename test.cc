@@ -3,6 +3,7 @@
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
+#include "AFunction_ext.hpp"
 #endif
 using namespace std;
 
@@ -19,26 +20,31 @@ double myserver(Stack stack)
     return 0.0;
 }
 
-double myresponse(double a)
+bool myresponse(    Stack stack,
+                    KN<double> *const &u,
+                    Fem2D::Mesh const * const &pTh)
 {
+    const Fem2D::Mesh &Th(*pTh);
 
-    // // to get FreeFem++  data
-    // MeshPoint &mp = *MeshPointStack(stack); // the struct to get x,y, normal , value
-    // double x = mp.P.x;                      // get the current x value
-    // double y = mp.P.y;                      // get the current y value
-
-    // cout << "x = " << x << " y=" << y << " " << sin(x)*cos(y) <<  endl;
+    cout << "Th.nt = " << Th.nt  << endl;
+    for(int i = 0; i < Th.nt; i++)
+    {
+        const int &v0 = Th(i, 0);
+        const int &v1 = Th(i, 1);
+        const int &v2 = Th(i, 2);
+        cout << Th(v0).x << Th(v0).y << u[0][v0] << endl;
+    }
+    
     svr.Get("/hi", [](const Request &req, Response &res) {
-        
-        res.set_content("<h1>Hello World!</h1>", "text/html");
+        res.set_content("<svg height=\"250\" width=\"500\"><polygon points=\"220,10 300,210 170,250 123,234\" style=\"fill:lime;stroke:purple;stroke-width:1\" />Sorry, your browser does not support inline SVG.</svg>", "text/html");
     });
 
-    svr.Get(R"(/hello/(\d+))", [a](const Request &req, Response &res) {
-        // auto numbers = req.matches[1];
-        res.set_content(to_string(a), "text/plain");
+    svr.Get(R"(/hello/(\d+))", [](const Request &req, Response &res) {
+        auto numbers = req.matches[1];
+        res.set_content(numbers, "text/plain");
     });
 
-    return 0.0;
+    return true;
 }
 
 template <class R>
@@ -72,7 +78,7 @@ class OneOperator0s : public OneOperator
 
 static void init(){
     Global.Add("myserver", "(", new OneOperator0s<double>(myserver));
-    Global.Add("myresponse", "(", new OneOperator1<double>(myresponse));
+    Global.Add("myresponse", "(", new OneOperator2s_<bool, KN<double> *const, Fem2D::Mesh const * const>(myresponse));
 }
 
 LOADFUNC(init);

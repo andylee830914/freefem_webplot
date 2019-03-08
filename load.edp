@@ -1,9 +1,23 @@
 load "myserver"
 
 
-// mesh Th=square(5,5);
-// fespace Vh(Th,P1);
+border ba(t=0,1.0) { x=t;   y=0;   label=1; };
+border bb(t=0,0.5) { x=1;   y=t;   label=1; };
+border bc(t=0,0.5) { x=1-t; y=0.5; label=1; };
+border bd(t=0.5,1) { x=0.5; y=t;   label=1; };
+border be(t=0.5,1) { x=1-t; y=1;   label=1; };
+border bf(t=0.0,1) { x=0;   y=1-t; label=1; };
 
-myresponse(200);
+mesh Th = buildmesh( ba(6)+bb(4)+bc(4)+bd(4)+be(4)+bf(6) );
+
+fespace Vh(Th,P1);
+Vh u,v;
+func f = -1;
+solve Poisson(u,v)
+  = int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))
+    - int2d(Th)(f*v) + on(1,u=0);
+
+myresponse(u[],Th);
+
 // cout << uh[].min << " " << uh[].max << endl;
 myserver();
