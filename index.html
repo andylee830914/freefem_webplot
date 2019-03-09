@@ -65,7 +65,7 @@
                     </div>
                     <div class="form-group form-check">
                         <input type="checkbox" class="form-check-input" id="level" checked>
-                        <label class="form-check-label" for="level">level set</label>
+                        <label class="form-check-label" for="level">isoline</label>
                     </div>
                 </form>
 
@@ -173,7 +173,6 @@ $(document).ready(function () {
             ctx.drawImage(img, 0, 0,1024,1024);
             var imgURI = canvas
                 .toDataURL('image/png')
-            console.log(imgURI);
             var w = window.open(imgURI, 'test.png');
             ctx.clearRect(0, 0, canvas.width, canvas.height)
             $(canvas).attr('width', '0').attr('height', '0');
@@ -193,6 +192,8 @@ function mydraw() {
     draw.clear()
     $("#new_plot > svg").attr('height','');
     draw.viewbox({ x: -0.05 * sc, y: -0.05 * sc, width: 1.1 * sc, height: 1.1 * sc })
+    var color = new SVG.Color('#0000ff').morph('#ff0000')
+    
     if ($("#mesh").is(':checked')){
         mesh_data.forEach((e, i) => {
             var polyline = draw.polygon([[e[0].x * w, e[0].y * h - h ], [e[1].x * w, e[1].y * h - h], [e[2].x * w, e[2].y * h - h]])
@@ -255,7 +256,8 @@ function mydraw() {
             // ve = vlevel[vi]
             // console.log(ve);
             vlevel.forEach((ve,vi) => {
-            level_line = [];
+                console.log(vi);
+                level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
                     rate = (ve - e[0].u)/(e[1].u - e[0].u)
@@ -271,7 +273,7 @@ function mydraw() {
                     rate = (ve - e[2].u) / (e[0].u - e[2].u)
                     level_line.push([(rate * e[0].x + (1 - rate) * e[2].x) * w, (rate * e[0].y + (1 - rate) * e[2].y) * h - h])
                 }
-                var polyline = draw.polyline(level_line).fill('none').stroke({ width: 1 / 500 * sc }).stroke({ color: '#f06' });
+                var polyline = draw.polyline(level_line).fill('none').stroke({ width: 1 / 500 * sc }).stroke({ color: color.at(vi/nlevel).toHex()  });
             });
         })
     }
