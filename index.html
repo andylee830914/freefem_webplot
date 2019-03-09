@@ -47,10 +47,14 @@
 
                 <form id="control" class="controlbox">
                     <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="mesh" checked>
+                        <label class="form-check-label" for="mesh">mesh</label>
+                    </div>
+                    <div class="form-group form-check subcheck">
                         <input type="checkbox" class="form-check-input" id="tri_index">
                         <label class="form-check-label" for="tri_index">index of triangles</label>
                     </div>
-                    <div class="form-group form-check">
+                    <div class="form-group form-check subcheck">
                         <input type="checkbox" class="form-check-input" id="ver_index">
                         <label class="form-check-label" for="ver_index">index of vertices</label>
                     </div>
@@ -112,6 +116,11 @@ $(document).ready(function () {
         console.log(xhr);
     })
 
+
+    $("#mesh").change(function () {
+        mydraw();
+    });
+
     $("#tri_index").change(function () {
         mydraw();
     });
@@ -134,30 +143,40 @@ function mydraw() {
     draw.clear()
     $("#new_plot > svg").attr('height','');
     draw.viewbox({ x: -0.05, y: -0.05, width: 1.1, height: 1.1 })
-    mesh_data.forEach((e,i) => {
-        var polyline = draw.polygon([[e[0].x*w, e[0].y*h+1], [e[1].x*w, e[1].y*h+1], [e[2].x*w, e[2].y*h+1]])
-        polyline.fill('none').stroke({ width: 1/500 })
-        if ($("#tri_index").is(':checked')) {
-            var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h + 1)
-                .font({
-                    size: "0.02px",
-                    anchor: 'middle'
-                })
-        }  
-    });
+    if ($("#mesh").is(':checked')){
+        mesh_data.forEach((e, i) => {
+            var polyline = draw.polygon([[e[0].x * w, e[0].y * h + 1], [e[1].x * w, e[1].y * h + 1], [e[2].x * w, e[2].y * h + 1]])
+            polyline.fill('none').stroke({ width: 1 / 500 })
+            if ($("#tri_index").is(':checked')) {
+                var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h + 1)
+                    .font({
+                        size: "0.02px",
+                        anchor: 'middle'
+                    })
+            }
+        });
 
-    if ($("#ver_index").is(':checked') && typeof vertex_data !== 'undefined') {
-        vertex_data.forEach((e,i)=>{
-            var circle = draw.circle(1/100).attr('cx',e.x).attr('cy',e.y*h+1);
-            var text = draw.plain(i).attr('x', e.x * w-0.015).attr('y', e.y * h + 1-0.01)
-                .font({
-                    size: "0.02px",
-                    anchor: 'middle',
-                    fill: '#0000FF'
-                })
+        if ($("#ver_index").is(':checked') && typeof vertex_data !== 'undefined') {
+            vertex_data.forEach((e, i) => {
+                var circle = draw.circle(1 / 100).attr('cx', e.x).attr('cy', e.y * h + 1);
+                var text = draw.plain(i).attr('x', e.x * w - 0.015).attr('y', e.y * h + 1 - 0.01)
+                    .font({
+                        size: "0.02px",
+                        anchor: 'middle',
+                        fill: '#0000FF'
+                    })
+            })
+
+        }
+    }else{
+        edge_data.forEach((e, i) => {
+            var line = draw.line(e.vertices[0].x * w, e.vertices[0].y * h + 1, e.vertices[1].x * w, e.vertices[1].y * h + 1)
+                .stroke({ width: 1 / 500 });
         })
-        
     }
+    
+
+
 
     if ($("#edg_label").is(':checked') && typeof edge_data !== 'undefined') {
         edge_data.forEach((e, i) => {
