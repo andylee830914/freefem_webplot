@@ -22,3 +22,10 @@
         .subcheck{
             margin-left: 2em;
         }
+
+        .plot_title{
+            padding-left: 25px;
+            padding-right: 25px;
+            padding-bottom: 5px;
+
+        }

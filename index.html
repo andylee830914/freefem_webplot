@@ -11,7 +11,9 @@
     <!-- <script src="js/Chart.bundle.min.js"></script> -->
     <script src="js/bootstrap.min.js"></script>
     <script src="js/svg.min.js"></script>
-
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>  
+    <script src="js/CSS3DRenderer.js"></script>
     <!-- <script async src="mathjax/MathJax.js"></script> -->
 
 
@@ -28,7 +30,12 @@
         <div class="row">
             <div class="col-8">
                 <div id="dashboard_new" class="dashboard jumbotron">
-                    <h6>Output</h6>
+                    <div class="row plot_title">
+                        <div class="d-flex flex-fill align-items-center"><h6>Output</h6></div>
+                        <div class="d-flex justify-content-end align-items-center">
+                            <button type="button" class="btn btn-primary" id="3dstart">2D/3D</button>
+                        </div>
+                    </div>
                     <div id="new_plot" style="text-align: center" ></div>
                 </div>
             </div>
@@ -90,6 +97,95 @@ var edge_data;
 var minmax_data;
 
 var draw = SVG('new_plot')
+
+var camera, scene, renderer;
+var controls
+// var scene2, renderer2;
+
+function init() {
+
+    var frustumSize = 500;
+    var aspect = 1;
+    camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000);
+    camera.position.set(- 200, 200, 200);
+    controls = new THREE.OrbitControls(camera);
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f0f0);
+
+    // left
+    createPlane(
+        100, 100,
+        '#d2691e',
+        new THREE.Vector3(- 50, 0, 0),
+        new THREE.Euler(0, - 90 * THREE.Math.DEG2RAD, 0)
+    );
+    // right
+    createPlane(
+        100, 100,
+        '#8b4513',
+        new THREE.Vector3(0, 0, 50),
+        new THREE.Euler(0, 0, 0)
+    );
+    // top
+    createPlane(
+        100, 100,
+        '#9acd32',
+        new THREE.Vector3(0, 50, 0),
+        new THREE.Euler(- 90 * THREE.Math.DEG2RAD, 0, 0)
+    );
+    // bottom
+    createPlane(
+        300, 300,
+        '#2e8b57',
+        new THREE.Vector3(0, - 50, 0),
+        new THREE.Euler(- 90 * THREE.Math.DEG2RAD, 0, 0)
+    );
+    //
+    var theatre = document.getElementById("new_plot")
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(1);
+    renderer.setSize(500, 500);
+
+    // renderer = new THREE.CSS3DRenderer();
+    // renderer.setSize(510, 510);
+    // renderer.domElement.id = 'my3d';
+    // renderer.domElement.style.position = 'relative';
+
+
+    theatre.appendChild(renderer.domElement);
+
+    $(theatre).children('svg').hide();
+
+
+
+    function createPlane(width, height, cssColor, pos, rot) {
+
+        // var element = document.createElement('div');
+        // element.style.width = width + 'px';
+        // element.style.height = height + 'px';
+        // element.style.opacity = 0.75;
+        // element.style.background = cssColor;
+        // var object = new THREE.CSS3DObject(element);
+        // object.position.copy(pos);
+        // object.rotation.copy(rot);
+        // scene.add(object);
+
+        mcolor = new THREE.Color(cssColor);
+        var material = new THREE.MeshBasicMaterial({ color:mcolor, wireframe: false, wireframeLinewidth: 1, side: THREE.DoubleSide });
+        var geometry = new THREE.PlaneBufferGeometry(width, height);
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(pos);
+        mesh.rotation.copy(rot);
+        scene.add(mesh);
+    }
+
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
 
 $(document).ready(function () {    
 
@@ -156,13 +252,13 @@ $(document).ready(function () {
     });
 
     $('#dsvg').click(function(){
-        text = $('#new_plot').html();
+        text = $('#new_plot > svg')[0].outerHTML;
         var file = new Blob([text], { type: 'image/svg+xml' });
         var w = window.open(URL.createObjectURL(file),'test.svg');
     });
     
     $('#dpng').click(function () {
-        text = $('#new_plot').html();
+        text = $('#new_plot > svg')[0].outerHTML;
         var file = new Blob([text], { type: 'image/svg+xml' });
         var canvas = document.getElementById('temp_canvas');
         $(canvas).attr('width','1024').attr('height','1024');
@@ -180,6 +276,20 @@ $(document).ready(function () {
         };
 
     })
+
+    $('#3dstart').click(function(){
+        if($("#new_plot").children("svg").is(":hidden")){
+            $("#new_plot").children("svg").show();
+            $("#new_plot").children("canvas").remove();
+            controls.enabled = false
+            // $("#my3d").remove();
+        }else{
+            // controls.enabled = true
+            init();
+            animate();
+        }
+
+    });
 
     
     
@@ -256,7 +366,6 @@ function mydraw() {
             // ve = vlevel[vi]
             // console.log(ve);
             vlevel.forEach((ve,vi) => {
-                console.log(vi);
                 level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
