@@ -63,6 +63,10 @@
                         <input type="checkbox" class="form-check-input" id="edg_label">
                         <label class="form-check-label" for="edg_label">label of edges</label>
                     </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="level" checked>
+                        <label class="form-check-label" for="level">level set</label>
+                    </div>
                 </form>
 
                 <form>
@@ -83,49 +87,69 @@
 var mesh_data;
 var vertex_data;
 var edge_data;
+var minmax_data;
 
 var draw = SVG('new_plot')
 
 $(document).ready(function () {    
 
-    $.ajax({
-        url:'./mesh',
-        type: 'GET'
-    }).done((m)=>{
-        console.log(m);
-        mesh_data = m;
+    function mesh_ajax() {
+        return $.ajax({
+            url: './mesh',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            mesh_data = m;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+    
+    function vertex_ajax() {
+        return $.ajax({
+            url: './vertex',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            vertex_data = m;
+            minv = m[0].u;
+            maxv = m[0].u;
+            var mini = 0, maxi = 0;
+            m.forEach((e, index) => {
+                if (e.u > maxv) {
+                    maxv = e.u;
+                    maxi = index;
+                }
+                if (e.u < minv) {
+                    minv = e.u;
+                    mini = index;
+                }
+            });
+            minmax_data = [{ 'id': mini, 'u': minv }, { 'id': maxi, 'u': maxv }]
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+    
+    function edge_ajax() {
+        return $.ajax({
+            url: './edge',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            edge_data = m;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+    
+
+    $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
         mydraw()
-    }).fail((xhr, status, error) =>{
-        console.log("Status: " + status + " Error: " + error);
-        console.log(xhr);
     })
-
-    $.ajax({
-        url: './vertex',
-        type: 'GET'
-    }).done((m) => {
-        console.log(m);
-        vertex_data = m;
-        mydraw()
-
-    }).fail((xhr, status, error) => {
-        console.log("Status: " + status + " Error: " + error);
-        console.log(xhr);
-    })
-
-    $.ajax({
-        url: './edge',
-        type: 'GET'
-    }).done((m) => {
-        console.log(m);
-        edge_data = m;
-        mydraw()
-
-    }).fail((xhr, status, error) => {
-        console.log("Status: " + status + " Error: " + error);
-        console.log(xhr);
-    })
-
 
     $('input[type="checkbox"]').change(function () {
         mydraw();
@@ -217,6 +241,42 @@ function mydraw() {
         })
 
     }
+
+    if ($("#level").is(':checked') && typeof mesh_data !== 'undefined') {
+        nlevel = 20;
+        vlevel = [];
+        dl = (minmax_data[1].u - minmax_data[0].u)/nlevel;
+        vlevel.push(minmax_data[0].u + 0.4 * dl);
+        for (let i = 1; i <= nlevel; i++) {
+            vlevel.push(minmax_data[0].u+i*dl);
+        }
+        mesh_data.forEach((e, i) => {
+            // vi = 19;
+            // ve = vlevel[vi]
+            // console.log(ve);
+            vlevel.forEach((ve,vi) => {
+            level_line = [];
+                if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
+                    //at 1st edge of the element
+                    rate = (ve - e[0].u)/(e[1].u - e[0].u)
+                    level_line.push([(rate * e[1].x + ( 1 - rate ) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h - h])                    
+                }
+                if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
+                    //at 2nd edge of the element
+                    rate = (ve - e[1].u) / (e[2].u - e[1].u)
+                    level_line.push([(rate * e[2].x + (1 - rate) * e[1].x) * w, (rate * e[2].y + (1 - rate)* e[1].y) * h - h])
+                }
+                if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
+                    //at 3rd edge of the element
+                    rate = (ve - e[2].u) / (e[0].u - e[2].u)
+                    level_line.push([(rate * e[0].x + (1 - rate) * e[2].x) * w, (rate * e[0].y + (1 - rate) * e[2].y) * h - h])
+                }
+                var polyline = draw.polyline(level_line).fill('none').stroke({ width: 1 / 500 * sc }).stroke({ color: '#f06' });
+            });
+        })
+    }
+
+
     
 }
 
