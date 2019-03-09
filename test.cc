@@ -45,7 +45,6 @@ bool myresponse(    Stack stack,
         // generate element(triangle) JSON
         stringstream json;
         json << "[" << endl;
-        cout << "Th.nt = " << Th.nt << endl;
         for (int i = 0; i < Th.nt; i++)
         {
             const int &v0 = Th(i, 0);
@@ -95,7 +94,7 @@ bool myresponse(    Stack stack,
             const int &v1 = Th(Th.bedges[i][1]);
             json << "  { \"label\": "<< Th.be(i) <<"," << endl;
             json << "    \"vertices\":[{\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[v0] << "}," << endl;
-            json << "               {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[v1] << "}]" << endl;
+            json << "                {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[v1] << "}]" << endl;
             json << "  }";
             if (i != Th.neb - 1)
             {

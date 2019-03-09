@@ -28,7 +28,7 @@
         <div class="row">
             <div class="col-8">
                 <div id="dashboard_new" class="dashboard jumbotron">
-                    <p>--output--</p>
+                    <h6>Output</h6>
                     <div id="new_plot" style="text-align: center" ></div>
                 </div>
             </div>
@@ -46,6 +46,7 @@
                 </div>
 
                 <form id="control" class="controlbox">
+                    <h6>Preference</h6>
                     <div class="form-group form-check">
                         <input type="checkbox" class="form-check-input" id="mesh" checked>
                         <label class="form-check-label" for="mesh">mesh</label>
@@ -64,8 +65,17 @@
                     </div>
                 </form>
 
+                <form>
+                    <h6>Download</h6>
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                       <button type="button" class="btn btn-outline-primary" id="dsvg">SVG</button>
+                       <button type="button" class="btn btn-outline-primary" id="dpng">PNG</button>
+                    </div>
+                </form>
+
             </div>
         </div>
+        <canvas id="temp_canvas"></canvas>
     </main>
 
 </body>
@@ -117,40 +127,56 @@ $(document).ready(function () {
     })
 
 
-    $("#mesh").change(function () {
+    $('input[type="checkbox"]').change(function () {
         mydraw();
     });
 
-    $("#tri_index").change(function () {
-        mydraw();
+    $('#dsvg').click(function(){
+        text = $('#new_plot').html();
+        var file = new Blob([text], { type: 'image/svg+xml' });
+        var w = window.open(URL.createObjectURL(file),'test.svg');
     });
+    
+    $('#dpng').click(function () {
+        text = $('#new_plot').html();
+        var file = new Blob([text], { type: 'image/svg+xml' });
+        var canvas = document.getElementById('temp_canvas');
+        $(canvas).attr('width','1024').attr('height','1024');
+        var ctx = canvas.getContext('2d');
+        var img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0,1024,1024);
+            var imgURI = canvas
+                .toDataURL('image/png')
+            console.log(imgURI);
+            var w = window.open(imgURI, 'test.png');
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            $(canvas).attr('width', '0').attr('height', '0');
 
-    $("#ver_index").change(function () {
-        mydraw();
-    });
+        };
 
-    $("#edg_label").change(function () {
-        mydraw();
-    });
+    })
 
     
     
 });
 
 function mydraw() {
-    const w = 1;
-    const h = -1;
+    const sc = 500;
+    const w = 1 * sc;
+    const h = -1 * sc;
     draw.clear()
     $("#new_plot > svg").attr('height','');
-    draw.viewbox({ x: -0.05, y: -0.05, width: 1.1, height: 1.1 })
+    draw.viewbox({ x: -0.05 * sc, y: -0.05 * sc, width: 1.1 * sc, height: 1.1 * sc })
     if ($("#mesh").is(':checked')){
         mesh_data.forEach((e, i) => {
-            var polyline = draw.polygon([[e[0].x * w, e[0].y * h + 1], [e[1].x * w, e[1].y * h + 1], [e[2].x * w, e[2].y * h + 1]])
-            polyline.fill('none').stroke({ width: 1 / 500 })
+            var polyline = draw.polygon([[e[0].x * w, e[0].y * h - h ], [e[1].x * w, e[1].y * h - h], [e[2].x * w, e[2].y * h - h]])
+            polyline.fill('none').stroke({ width: 1 / 500 * sc })
             if ($("#tri_index").is(':checked')) {
-                var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h + 1)
+                var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h - h)
                     .font({
-                        size: "0.02px",
+                        size: 0.02 * sc + "px",
                         anchor: 'middle'
                     })
             }
@@ -158,10 +184,10 @@ function mydraw() {
 
         if ($("#ver_index").is(':checked') && typeof vertex_data !== 'undefined') {
             vertex_data.forEach((e, i) => {
-                var circle = draw.circle(1 / 100).attr('cx', e.x).attr('cy', e.y * h + 1);
-                var text = draw.plain(i).attr('x', e.x * w - 0.015).attr('y', e.y * h + 1 - 0.01)
+                var circle = draw.circle(1 / 100 * sc).attr('cx', e.x*w).attr('cy', e.y * h -h);
+                var text = draw.plain(i).attr('x', (e.x - 0.015)*w).attr('y', (e.y + 0.01 - 1) * h )
                     .font({
-                        size: "0.02px",
+                        size: 0.02 * sc + "px",
                         anchor: 'middle',
                         fill: '#0000FF'
                     })
@@ -170,8 +196,8 @@ function mydraw() {
         }
     }else{
         edge_data.forEach((e, i) => {
-            var line = draw.line(e.vertices[0].x * w, e.vertices[0].y * h + 1, e.vertices[1].x * w, e.vertices[1].y * h + 1)
-                .stroke({ width: 1 / 500 });
+            var line = draw.line(e.vertices[0].x * w, e.vertices[0].y * h - h, e.vertices[1].x * w, e.vertices[1].y * h -h)
+                .stroke({ width: 1 / 500 * sc });
         })
     }
     
@@ -180,11 +206,11 @@ function mydraw() {
 
     if ($("#edg_label").is(':checked') && typeof edge_data !== 'undefined') {
         edge_data.forEach((e, i) => {
-            var line = draw.line(e.vertices[0].x*w, e.vertices[0].y*h+1, e.vertices[1].x*w, e.vertices[1].y*h+1)
-                        .stroke({ width: 1/500 }).stroke({color: '#f06'});
-            var text = draw.plain(e.label).attr('x', (e.vertices[0].x+ e.vertices[1].x)/2 * w - 0.015).attr('y', (e.vertices[0].y+ e.vertices[1].y)/2 * h + 1 )
+            var line = draw.line(e.vertices[0].x*w, e.vertices[0].y*h-h, e.vertices[1].x*w, e.vertices[1].y*h-h)
+                        .stroke({ width: 1/500 *sc}).stroke({color: '#f06'});
+            var text = draw.plain(e.label).attr('x', (e.vertices[0].x+ e.vertices[1].x)/2 * w - 0.015*sc).attr('y', (e.vertices[0].y+ e.vertices[1].y)/2 * h -h )
                 .font({
-                    size: "0.02px",
+                    size: 0.02*sc+"px",
                     anchor: 'middle',
                     fill: '#f06'
                 })
