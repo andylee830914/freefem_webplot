@@ -54,6 +54,10 @@
                         <input type="checkbox" class="form-check-input" id="ver_index">
                         <label class="form-check-label" for="ver_index">index of vertices</label>
                     </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="edg_label">
+                        <label class="form-check-label" for="edg_label">label of edges</label>
+                    </div>
                 </form>
 
             </div>
@@ -64,6 +68,8 @@
 <script>
 var mesh_data;
 var vertex_data;
+var edge_data;
+
 var draw = SVG('new_plot')
 
 $(document).ready(function () {    
@@ -71,9 +77,9 @@ $(document).ready(function () {
     $.ajax({
         url:'./mesh',
         type: 'GET'
-    }).done((mesh)=>{
-        console.log(mesh);
-        mesh_data = mesh;
+    }).done((m)=>{
+        console.log(m);
+        mesh_data = m;
         mydraw()
     }).fail((xhr, status, error) =>{
         console.log("Status: " + status + " Error: " + error);
@@ -83,9 +89,22 @@ $(document).ready(function () {
     $.ajax({
         url: './vertex',
         type: 'GET'
-    }).done((vertex) => {
-        console.log(vertex);
-        vertex_data = vertex;
+    }).done((m) => {
+        console.log(m);
+        vertex_data = m;
+        mydraw()
+
+    }).fail((xhr, status, error) => {
+        console.log("Status: " + status + " Error: " + error);
+        console.log(xhr);
+    })
+
+    $.ajax({
+        url: './edge',
+        type: 'GET'
+    }).done((m) => {
+        console.log(m);
+        edge_data = m;
         mydraw()
 
     }).fail((xhr, status, error) => {
@@ -98,6 +117,10 @@ $(document).ready(function () {
     });
 
     $("#ver_index").change(function () {
+        mydraw();
+    });
+
+    $("#edg_label").change(function () {
         mydraw();
     });
 
@@ -134,6 +157,20 @@ function mydraw() {
                 })
         })
         
+    }
+
+    if ($("#edg_label").is(':checked') && typeof edge_data !== 'undefined') {
+        edge_data.forEach((e, i) => {
+            var line = draw.line(e.vertices[0].x*w, e.vertices[0].y*h+1, e.vertices[1].x*w, e.vertices[1].y*h+1)
+                        .stroke({ width: 1/500 }).stroke({color: '#f06'});
+            var text = draw.plain(e.label).attr('x', (e.vertices[0].x+ e.vertices[1].x)/2 * w - 0.015).attr('y', (e.vertices[0].y+ e.vertices[1].y)/2 * h + 1 )
+                .font({
+                    size: "0.02px",
+                    anchor: 'middle',
+                    fill: '#f06'
+                })
+        })
+
     }
     
 }

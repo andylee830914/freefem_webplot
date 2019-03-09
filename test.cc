@@ -30,61 +30,83 @@ double myserver(Stack stack)
 }
 
 bool myresponse(    Stack stack,
-                    KN<double> *const &u,
+                    KN<double> *const &pu,
                     Fem2D::Mesh const * const &pTh)
 {
-    stringstream tri_json;
-    stringstream ver_json;
     const Fem2D::Mesh &Th(*pTh);
-
-    // generate element(triangle) JSON
-    tri_json << "[" << endl;
-    cout << "Th.nt = " << Th.nt  << endl;
-    for(int i = 0; i < Th.nt; i++)
-    {
-        const int &v0 = Th(i, 0);
-        const int &v1 = Th(i, 1);
-        const int &v2 = Th(i, 2);
-        tri_json << "  [ {\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[0][v0] << "}" << endl;
-        tri_json << "   ,{\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[0][v1] << "}" << endl;
-        tri_json << "   ,{\"x\":" << Th(v2).x << ",\"y\":" << Th(v2).y << ",\"u\":" << u[0][v2] << "}]";
-        if (i != Th.nt-1) {
-            tri_json << ",";
-        }
-        tri_json << endl;
-        
-    }
-    tri_json << "]" << endl;
-    string tri_jsonstr;
-    tri_jsonstr = tri_json.str();
-
-
-    // generate vertices JSON
-    ver_json << "[" << endl;
-    for (int i = 0; i < Th.nv; i++)
-    {
-        ver_json << "  {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << u[0][i] << "}";
-        if (i != Th.nv - 1)
-        {
-            ver_json << ",";
-        }
-        ver_json << endl;
-    }
-    ver_json << "]" << endl;
-    string ver_jsonstr;
-    ver_jsonstr = ver_json.str();
+    KN<double> &u(*pu);
 
     // ajax API part
     svr.Get("/hi", [](const Request &req, Response &res) {
         res.set_content("<svg height=\"250\" width=\"500\"><polygon points=\"220,10 300,210 170,250 123,234\" style=\"fill:lime;stroke:purple;stroke-width:1\" />Sorry, your browser does not support inline SVG.</svg>", "text/html");
     });
 
-    svr.Get("/mesh", [tri_jsonstr](const Request &req, Response &res) {
-        res.set_content(tri_jsonstr, "application/json");
+    svr.Get("/mesh", [&](const Request &req, Response &res) {
+        // generate element(triangle) JSON
+        stringstream json;
+        json << "[" << endl;
+        cout << "Th.nt = " << Th.nt << endl;
+        for (int i = 0; i < Th.nt; i++)
+        {
+            const int &v0 = Th(i, 0);
+            const int &v1 = Th(i, 1);
+            const int &v2 = Th(i, 2);
+            json << "  [ {\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[v0] << "}," << endl;
+            json << "    {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[v1] << "}," << endl;
+            json << "    {\"x\":" << Th(v2).x << ",\"y\":" << Th(v2).y << ",\"u\":" << u[v2] << "}]";
+            if (i != Th.nt - 1)
+            {
+                json << ",";
+            }
+            json << endl;
+        }
+        json << "]" << endl;
+        string jsonstr;
+        jsonstr = json.str();
+        res.set_content(jsonstr, "application/json");
     });
 
-    svr.Get("/vertex", [ver_jsonstr](const Request &req, Response &res) {
-        res.set_content(ver_jsonstr, "application/json");
+    svr.Get("/vertex", [&](const Request &req, Response &res) {
+        // generate vertices JSON
+        stringstream json;
+        json << "[" << endl;
+        for (int i = 0; i < Th.nv; i++)
+        {
+            json << "  {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << u[i] << "}";
+            if (i != Th.nv - 1)
+            {
+                json << ",";
+            }
+            json << endl;
+        }
+        json << "]" << endl;
+        string jsonstr;
+        jsonstr = json.str();
+        res.set_content(jsonstr, "application/json");
+    });
+
+    svr.Get("/edge", [&](const Request &req, Response &res) {
+        // generate edge JSON
+        stringstream json;
+        json << "[" << endl;
+        for (int i = 0; i < Th.neb; i++)
+        {
+            const int &v0 = Th(Th.bedges[i][0]);
+            const int &v1 = Th(Th.bedges[i][1]);
+            json << "  { \"label\": "<< Th.be(i) <<"," << endl;
+            json << "    \"vertices\":[{\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[v0] << "}," << endl;
+            json << "               {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[v1] << "}]" << endl;
+            json << "  }";
+            if (i != Th.neb - 1)
+            {
+                json << ",";
+            }
+            json << endl;
+        }
+        json << "]" << endl;
+        string jsonstr;
+        jsonstr = json.str();
+        res.set_content(jsonstr, "application/json");
     });
 
     svr.Get(R"(/hello/(\d+))", [](const Request &req, Response &res) {
