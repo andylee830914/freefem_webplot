@@ -12,7 +12,7 @@ mesh Th = buildmesh( ba(6)+bb(4)+bc(4)+bd(4)+be(4)+bf(6) );
 
 fespace Vh(Th,P1);
 Vh u,v;
-func f = -1;
+func f = 1;
 solve Poisson(u,v)
   = int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))
     - int2d(Th)(f*v) + on(1,u=0);
