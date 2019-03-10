@@ -11,10 +11,8 @@ using namespace std;
 // using namespace Fem2D;
 using namespace httplib;
 Server svr;
-double myserver(Stack stack)
+double myserver()
 {
-
-
 
     svr.set_base_dir("./static");
     svr.Get("/", [](const Request &req, Response &res) {
@@ -35,6 +33,7 @@ bool mywebplot(    Stack stack,
 {
     const Fem2D::Mesh &Th(*pTh);
     KN<double> &u(*pu);
+    // cout << (size(u) )<<endl;
 
     // ajax API part
     svr.Get("/hi", [](const Request &req, Response &res) {
@@ -116,37 +115,8 @@ bool mywebplot(    Stack stack,
     return true;
 }
 
-template <class R>
-class OneOperator0s : public OneOperator
-{
-    // the class to defined a evaluated a new function
-    // It  must devive from  E_F0 if it is mesh independent
-    // or from E_F0mps if it is mesh dependent
-    class E_F0_F : public E_F0mps
-    {
-      public:
-        typedef R (*func)(Stack stack);
-        func f; // the pointeur to the fnction myfunction
-        E_F0_F(func ff) : f(ff) {}
-
-        // the operator evaluation in freefem++
-        AnyType operator()(Stack stack) const { return SetAny<R>(f(stack)); }
-    };
-
-    typedef R (*func)(Stack);
-    func f;
-
-  public:
-    // the function which build the freefem++ byte code
-    E_F0 *code(const basicAC_F0 &) const { return new E_F0_F(f); }
-
-    // the constructor to say ff is a function without parameter
-    // and returning a R
-    OneOperator0s(func ff) : OneOperator(map_type[typeid(R).name()]), f(ff) {}
-};
-
 static void init(){
-    Global.Add("server", "(", new OneOperator0s<double>(myserver));
+    Global.Add("server", "(", new OneOperator0<double>(myserver));
     Global.Add("webplot", "(", new OneOperator2s_<bool, KN<double> *const, Fem2D::Mesh const * const>(mywebplot));
 }
 
