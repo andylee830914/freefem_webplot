@@ -13,6 +13,8 @@
     <script src="js/svg.min.js"></script>
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>  
+    <script src="js/data2blob.js"></script>
+
     <!-- <script src="js/CSS3DRenderer.js"></script> -->
     <!-- <script async src="mathjax/MathJax.js"></script> -->
 
@@ -282,9 +284,9 @@ $(document).ready(function () {
         img.src = URL.createObjectURL(file);
         img.onload = function () {
             ctx.drawImage(img, 0, 0,1024,1024);
-            var imgURI = canvas
-                .toDataURL('image/png')
-            var w = window.open(imgURI, 'test.png');
+            var imgURI = canvas.toDataURL('image/png')
+            blob = dataURItoBlob(imgURI)
+            var w = window.open(URL.createObjectURL(blob), 'test.png');
             ctx.clearRect(0, 0, canvas.width, canvas.height)
             $(canvas).attr('width', '0').attr('height', '0');
 
@@ -310,8 +312,9 @@ $(document).ready(function () {
             $('#3dpng').click(function () {
                 var canvas = document.querySelector("#new_plot > canvas");
                 canvas.getContext("experimental-webgl", { preserveDrawingBuffer: true });
-                var imgURI = canvas.toDataURL('image/png');
-                var w = window.open(imgURI, 'test.png');
+                var imgURI = canvas.toDataURL('image/png')   
+                blob = dataURItoBlob(imgURI)
+                var w = window.open(URL.createObjectURL(blob), 'test.png');
             })
         }
 
