@@ -33,7 +33,7 @@
                     <div class="row plot_title">
                         <div class="d-flex flex-fill align-items-center"><h6>Output</h6></div>
                         <div class="d-flex justify-content-end align-items-center">
-                            <button type="button" class="btn btn-primary" id="3dstart">2D/3D</button>
+                            <button type="button" class="btn btn-outline-secondary" id="3dstart">2D</button>
                         </div>
                     </div>
                     <div id="new_plot" style="text-align: center" ></div>
@@ -95,10 +95,10 @@ var camera, scene, renderer;
 var controls
 
 function init() {
-
-    var frustumSize = 550;
+    const sc = 1000;
+    var frustumSize = sc+sc/10;
     var aspect = 1;
-    camera = new THREE.OrthographicCamera(frustumSize/-2, frustumSize/2, frustumSize/2, frustumSize/-2, 1, 1000);
+    camera = new THREE.OrthographicCamera(frustumSize/-2, frustumSize/2, frustumSize/2, frustumSize/-2, 1, 2*sc);
     camera.position.set(0, 0, frustumSize);
     controls = new THREE.OrbitControls(camera);
     scene = new THREE.Scene();
@@ -109,7 +109,7 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ alpha: true , preserveDrawingBuffer: true });
     renderer.setPixelRatio(1);
-    renderer.setSize(500, 500);
+    renderer.setSize(sc, sc);
     renderer.setClearAlpha(0);
 
     // renderer = new THREE.CSS3DRenderer();
@@ -124,9 +124,9 @@ function init() {
 
     
     function mygenerate() {
-        const xc = 500;
-        const yc = 500;
-        const zc = 5000;
+        const xc = sc;
+        const yc = sc;
+        const zc = sc*10;
 
         mesh_data.forEach((e)=>{
             var geometry = new THREE.Geometry();
@@ -181,7 +181,8 @@ function init() {
                                     gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
                                 }
                             `,
-                wireframe: true
+                wireframe: true,
+                wireframeLinewidth: 1 / 500 * sc
             });
             geometry.vertices.push(triangle.a);
             geometry.vertices.push(triangle.b);
@@ -293,6 +294,8 @@ $(document).ready(function () {
 
     $('#3dstart').click(function(){
         if($("#new_plot").children("svg").is(":hidden")){
+            //2D mode
+            $(this).text('2D');
             $("#new_plot").children("svg").show();
             $("#new_plot").children("canvas").remove();
             $('#3dpng').remove();
@@ -302,6 +305,7 @@ $(document).ready(function () {
             // controls.enabled = true
             init();
             animate();
+            $(this).text('3D');
             $('#download_btn').append('<button type="button" class="btn btn-outline-primary" id="3dpng">3D PNG</button>');
             $('#3dpng').click(function () {
                 var canvas = document.querySelector("#new_plot > canvas");
