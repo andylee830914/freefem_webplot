@@ -1,31 +1,25 @@
-        body > .container {
-            padding-top: 5rem;
-        }
-
-        form {
-            padding-top: 10px;
-        }
-
-        .scheme {
-            padding-top: 0px;
-        }
-
-        .dashboard{
-            margin: 20px;
-            padding: 25px 25px;
-        }
-
-        .controlbox{
-            padding-top: 25px;
-        }
-
-        .subcheck{
-            margin-left: 2em;
-        }
-
-        .plot_title{
-            padding-left: 25px;
-            padding-right: 25px;
-            padding-bottom: 5px;
-
-        }
+body > .container {
+    padding-top: 5rem;
+}
+form {
+    padding-top: 10px;
+}
+.dashboard{
+    margin: 20px;
+    padding: 25px 25px;
+}
+.controlbox{
+    padding-top: 25px;
+}
+.subcheck{
+    margin-left: 2em;
+}
+.plot_title{
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 5px;
+}
+#new_plot > canvas {
+    width: 100% !important;
+    height: auto !important;
+}

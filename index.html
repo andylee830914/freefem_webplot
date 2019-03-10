@@ -40,20 +40,12 @@
                 </div>
             </div>
             <div class="col-4">
-
-                <!-- <div id="scheme" class="btn-group scheme" role="group" aria-label="...">
-                <button type="button" class="btn btn-default" id="m0">Default</button>
-                <button type="button" class="btn btn-default" id="m1">M1</button>
-                <button type="button" class="btn btn-default" id="m2">M2</button>
-                <button type="button" class="btn btn-default" id="m3">M3</button>
-            </div> -->
-
                 <div class="dropdown">
 
                 </div>
 
                 <form id="control" class="controlbox">
-                    <h6>Preference</h6>
+                    <h6>Preference (for 2D)</h6>
                     <div class="form-group form-check">
                         <input type="checkbox" class="form-check-input" id="mesh" checked>
                         <label class="form-check-label" for="mesh">mesh</label>
@@ -78,7 +70,7 @@
 
                 <form>
                     <h6>Download</h6>
-                    <div class="btn-group" role="group" aria-label="Basic example">
+                    <div class="btn-group" role="group" aria-label="Basic example" id="download_btn">
                        <button type="button" class="btn btn-outline-primary" id="dsvg">SVG</button>
                        <button type="button" class="btn btn-outline-primary" id="dpng">PNG</button>
                     </div>
@@ -95,29 +87,30 @@ var mesh_data;
 var vertex_data;
 var edge_data;
 var minmax_data;
-
+//initial for 2D
 var draw = SVG('new_plot')
 
+//initial for 3D
 var camera, scene, renderer;
 var controls
-// var scene2, renderer2;
 
 function init() {
 
-    var frustumSize = 550;
+    var frustumSize = 530;
     var aspect = 1;
     camera = new THREE.OrthographicCamera(frustumSize/-2, frustumSize/2, frustumSize/2, frustumSize/-2, 1, 1000);
     camera.position.set(0, 0, 200);
     controls = new THREE.OrbitControls(camera);
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    // scene.background = new THREE.Color(0xf0f0f0);
     mygenerate();
     //
     var theatre = document.getElementById("new_plot")
 
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ alpha: true , preserveDrawingBuffer: true });
     renderer.setPixelRatio(1);
     renderer.setSize(500, 500);
+    renderer.setClearAlpha(0);
 
     // renderer = new THREE.CSS3DRenderer();
     // renderer.setSize(510, 510);
@@ -137,23 +130,67 @@ function init() {
 
         mesh_data.forEach((e)=>{
             var geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3((e[0].x-0.5)*xc, (e[0].y-0.5)*yc, e[0].u*zc));
-            geometry.vertices.push(new THREE.Vector3((e[1].x-0.5)*xc, (e[1].y-0.5)*yc, e[1].u*zc));
-            geometry.vertices.push(new THREE.Vector3((e[2].x-0.5)*xc, (e[2].y-0.5)*yc, e[2].u*zc));
-            geometry.vertices.push(new THREE.Vector3((e[0].x-0.5)*xc, (e[0].y-0.5)*yc, e[0].u*zc));
-            mcolor = new THREE.Color('black');
-            var material = new THREE.MeshBasicMaterial({ color: mcolor, wireframe: true, wireframeLinewidth: 2, side: THREE.DoubleSide });
-            var line = new THREE.Line(geometry, material);
-            scene.add(line);
-        })
-        // mesh_data.forEach((e) => {
-        //     indicesOfFaces.push(e[0].index + vertex_data.length, e[1].index+vertex_data.length, e[2].index+ vertex_data.length);
-        // })
-        // console.log(verticesOfObject, indicesOfFaces)
+            var v0 = new THREE.Vector3((e[0].x-0.5)*xc, (e[0].y-0.5)*yc, e[0].u*zc);
+            var v1 = new THREE.Vector3((e[1].x-0.5)*xc, (e[1].y-0.5)*yc, e[1].u*zc);
+            var v2 = new THREE.Vector3((e[2].x-0.5)*xc, (e[2].y-0.5)*yc, e[2].u*zc);
+            
+            var triangle = new THREE.Triangle(v0, v1, v2);
+            var normal = triangle.normal();
+            mcolor = new THREE.Color(0x2194ce);
+            // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
+            var material = new THREE.ShaderMaterial({
+                uniforms: {
+                    color1: {
+                        value: new THREE.Color("#0000ff")
+                    },
+                    color2: {
+                        value: new THREE.Color("#ff0000")
+                    },
+                    bboxMin: {
+                        value: {'x': vertex_data[minmax_data[0].id].x*xc,
+                                'y': vertex_data[minmax_data[0].id].y*yc,
+                                'z': minmax_data[0].u*zc
+                                }
+                    },
+                    bboxMax: {
+                        value: {
+                            'x': vertex_data[minmax_data[1].id].x*xc,
+                            'y': vertex_data[minmax_data[1].id].x*yc,
+                            'z': minmax_data[1].u * zc
+                        }
+                    }
+                },
+                vertexShader: `
+                                uniform vec3 bboxMin;
+                                uniform vec3 bboxMax;
+                            
+                                varying vec2 vUv;
 
-        // var geometry = new THREE.PolyhedronGeometry(verticesOfObject, indicesOfFaces, 600, 0);
-        // var mesh = new THREE.Mesh(geometry, material);
-        // scene.add(mesh);
+                                void main() {
+                                    vUv.y = (position.z - bboxMin.z) / (bboxMax.z - bboxMin.z);
+                                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+                                }
+                            `,
+                fragmentShader: `
+                                uniform vec3 color1;
+                                uniform vec3 color2;
+                            
+                                varying vec2 vUv;
+                                
+                                void main() {
+                                    gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
+                                }
+                            `,
+                wireframe: true
+            });
+            geometry.vertices.push(triangle.a);
+            geometry.vertices.push(triangle.b);
+            geometry.vertices.push(triangle.c);
+            geometry.faces.push(new THREE.Face3(0, 1, 2, normal));
+            
+            var tri = new THREE.Mesh(geometry, material);
+            scene.add(tri);
+        })
         
     }
 
@@ -258,12 +295,20 @@ $(document).ready(function () {
         if($("#new_plot").children("svg").is(":hidden")){
             $("#new_plot").children("svg").show();
             $("#new_plot").children("canvas").remove();
+            $('#3dpng').remove();
+            // disenable camera orbit control
             controls.enabled = false
-            // $("#my3d").remove();
         }else{
             // controls.enabled = true
             init();
             animate();
+            $('#download_btn').append('<button type="button" class="btn btn-outline-primary" id="3dpng">3D PNG</button>');
+            $('#3dpng').click(function () {
+                var canvas = document.querySelector("#new_plot > canvas");
+                canvas.getContext("experimental-webgl", { preserveDrawingBuffer: true });
+                var imgURI = canvas.toDataURL('image/png');
+                var w = window.open(imgURI, 'test.png');
+            })
         }
 
     });
@@ -272,6 +317,7 @@ $(document).ready(function () {
     
 });
 
+// 2D Draw
 function mydraw() {
     const sc = 500;
     const w = 1 * sc;
