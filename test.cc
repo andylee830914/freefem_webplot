@@ -29,7 +29,7 @@ double myserver(Stack stack)
     return 0.0;
 }
 
-bool myresponse(    Stack stack,
+bool mywebplot(    Stack stack,
                     KN<double> *const &pu,
                     Fem2D::Mesh const * const &pTh)
 {
@@ -146,8 +146,8 @@ class OneOperator0s : public OneOperator
 };
 
 static void init(){
-    Global.Add("myserver", "(", new OneOperator0s<double>(myserver));
-    Global.Add("myresponse", "(", new OneOperator2s_<bool, KN<double> *const, Fem2D::Mesh const * const>(myresponse));
+    Global.Add("server", "(", new OneOperator0s<double>(myserver));
+    Global.Add("webplot", "(", new OneOperator2s_<bool, KN<double> *const, Fem2D::Mesh const * const>(mywebplot));
 }
 
 LOADFUNC(init);

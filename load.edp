@@ -18,7 +18,7 @@ solve Poisson(u,v)
     - int2d(Th)(f*v) + on(1,u=0);
 
 // plot(Th,ps="Lshapemesh.ps");
-myresponse(u[],Th);
+webplot(u[],Th);
 
 // cout << uh[].min << " " << uh[].max << endl;
-myserver();
+server();
