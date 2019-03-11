@@ -8,7 +8,7 @@
 #endif
 using namespace std;
 
-// using namespace Fem2D;
+using namespace Fem2D;
 using namespace httplib;
 Server svr;
 double myserver()
@@ -49,9 +49,9 @@ bool mywebplot(    Stack stack,
             const int &v0 = Th(i, 0);
             const int &v1 = Th(i, 1);
             const int &v2 = Th(i, 2);
-            json << "  [ {\"index\":" <<v0<< ",\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u[v0] << "}," << endl;
-            json << "    {\"index\":" <<v1<< ",\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u[v1] << "}," << endl;
-            json << "    {\"index\":" <<v2<< ",\"x\":" << Th(v2).x << ",\"y\":" << Th(v2).y << ",\"u\":" << u[v2] << "}]";
+            json << "  [ {\"index\":" << v0 << ",\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << ",\"u\":" << u(v0) << "}," << endl;
+            json << "    {\"index\":" << v1 << ",\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << ",\"u\":" << u(v1) << "}," << endl;
+            json << "    {\"index\":" << v2 << ",\"x\":" << Th(v2).x << ",\"y\":" << Th(v2).y << ",\"u\":" << u(v2) << "}]";
             if (i != Th.nt - 1)
             {
                 json << ",";

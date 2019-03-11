@@ -4,6 +4,7 @@
         "regex": "cpp",
         "bitset": "cpp",
         "ostream": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "functional": "cpp"
     }
 }
