@@ -387,8 +387,8 @@ function mydraw() {
         nlevel = 20;
         vlevel = [];
         dl = (minmax_data[1].u - minmax_data[0].u)/nlevel;
-        vlevel.push(minmax_data[0].u + 0.4 * dl);
-        for (let i = 1; i <= nlevel; i++) {
+        // vlevel.push(minmax_data[0].u);
+        for (let i = 0; i <= nlevel; i++) {
             vlevel.push(minmax_data[0].u+i*dl);
         }
         mesh_data.forEach((e, i) => {

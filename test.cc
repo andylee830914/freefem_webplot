@@ -1,5 +1,6 @@
 #include "httplib.h"
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
@@ -43,7 +44,7 @@ bool mywebplot(    Stack stack,
     svr.Get("/mesh", [&](const Request &req, Response &res) {
         // generate element(triangle) JSON
         stringstream json;
-        json << "[" << endl;
+        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
         for (int i = 0; i < Th.nt; i++)
         {
             const int &v0 = Th(i, 0);
@@ -67,7 +68,7 @@ bool mywebplot(    Stack stack,
     svr.Get("/vertex", [&](const Request &req, Response &res) {
         // generate vertices JSON
         stringstream json;
-        json << "[" << endl;
+        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
         for (int i = 0; i < Th.nv; i++)
         {
             json << "  {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << u[i] << "}";
@@ -86,7 +87,7 @@ bool mywebplot(    Stack stack,
     svr.Get("/edge", [&](const Request &req, Response &res) {
         // generate edge JSON
         stringstream json;
-        json << "[" << endl;
+        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
         for (int i = 0; i < Th.neb; i++)
         {
             const int &v0 = Th(Th.bedges[i][0]);
