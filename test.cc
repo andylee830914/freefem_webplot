@@ -120,7 +120,12 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     const double &x1 = Pmax.x;
     const double &y1 = Pmax.y;
 
+
     const double unset = -1e300;
+    int mi,Mi;
+    double myfmin = -unset;
+    double myfmax = unset;
+
     KN<double> f_FE(Th.nv, unset);
 
     if (fetype != "P1")
@@ -138,30 +143,29 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
 
             int i = Th(it, iv);
 
-            // if (f_FE[i] == unset)
-            // {
-                if (iv == 0)
-                {
-                    json << "  [ ";
-                }
-                else
-                {
-                    json << "    ";
-                }
-                MeshPointStack(stack)->setP(pTh, it, iv);
-                f_FE[i] = GetAny<double>((*ef)(stack)); // Expression ef is atype<double>()
-                json << "{\"index\":" << i << ",\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << f_FE[i] << "}";
+            if (iv == 0){
+                json << "  [ ";
+            }else{
+                json << "    ";
+            }
+            MeshPointStack(stack)->setP(pTh, it, iv);
+            double temp = GetAny<double>((*ef)(stack)); // Expression ef is atype<double>()
+            if (myfmin >= temp) {
+                mi = i;
+                myfmin = temp;
+            }
+            
+            if (myfmax <= temp) {
+                Mi = i;
+                myfmax = temp;
+            }
+            json << "{\"index\":" << i << ",\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << temp << "}";
 
-                if (iv != 2)
-                {
-                    json << "," << endl;
-                }
-                else
-                {
-                    json << "]" << endl;
-                }
-            // }
-
+            if (iv != 2){
+                json << "," << endl;
+            }else{
+                json << "]" << endl;
+            }
 
         }
         if (it != Th.nt - 1)
@@ -174,31 +178,39 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     string jsonstr;
     jsonstr = json.str();
 
+    cout << myfmin << "," << myfmax << endl;
     svr.Get("/mesh", [jsonstr](const Request &req, Response &res) {
         // generate element(triangle) JSON
         res.set_content(jsonstr, "application/json");
     });
 
-    svr.Get("/vertex", [&, f_FE](const Request &req, Response &res) {
+    svr.Get("/vertex", [&, mi,Mi,myfmin, myfmax](const Request &req, Response &res) {
         // generate vertices JSON
         stringstream json;
-        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
+        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) ;
+        json << "{" << endl;
+        json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
+        json << "             {\"id\":" << Mi << ",\"u\":" << myfmax << "}]," << endl;
+
+        json << "  \"position\": [" << endl;
         for (int i = 0; i < Th.nv; i++)
         {
-            json << "  {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << f_FE[i] << "}";
+            json << "    {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y <<  "}";
             if (i != Th.nv - 1)
             {
                 json << ",";
             }
             json << endl;
         }
-        json << "]" << endl;
+        json << "  ]" << endl;
+        json << "}" << endl;
+
         string jsonstr;
         jsonstr = json.str();
         res.set_content(jsonstr, "application/json");
     });
 
-    svr.Get("/edge", [&, f_FE](const Request &req, Response &res) {
+    svr.Get("/edge", [&](const Request &req, Response &res) {
         // generate edge JSON
         stringstream json;
         json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;

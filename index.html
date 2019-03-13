@@ -225,21 +225,8 @@ $(document).ready(function () {
             type: 'GET'
         }).done((m) => {
             console.log(m);
-            vertex_data = m;
-            minv = m[0].u;
-            maxv = m[0].u;
-            var mini = 0, maxi = 0;
-            m.forEach((e, index) => {
-                if (e.u > maxv) {
-                    maxv = e.u;
-                    maxi = index;
-                }
-                if (e.u < minv) {
-                    minv = e.u;
-                    mini = index;
-                }
-            });
-            minmax_data = [{ 'id': mini, 'u': minv }, { 'id': maxi, 'u': maxv }]
+            vertex_data = m.position;
+            minmax_data = m.minmax;
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
