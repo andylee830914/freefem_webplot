@@ -89,6 +89,8 @@ var mesh_data;
 var vertex_data;
 var edge_data;
 var minmax_data;
+var basic_data;
+
 //initial for 2D
 var draw = SVG('new_plot')
 
@@ -97,10 +99,11 @@ var camera, scene, renderer;
 var controls
 
 function init() {
+    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
     const sc = 1000;
     var frustumSize = sc+sc/10;
     var aspect = 1;
-    camera = new THREE.OrthographicCamera(frustumSize/-2, frustumSize/2, frustumSize/2, frustumSize/-2, 1, 2*sc);
+    camera = new THREE.OrthographicCamera(frustumSize/-2 * max, frustumSize/2 * max, frustumSize/2 * max, frustumSize/-2 * max, 1, 2*sc);
     camera.position.set(0, 0, frustumSize);
     controls = new THREE.OrbitControls(camera);
     scene = new THREE.Scene();
@@ -128,13 +131,17 @@ function init() {
     function mygenerate() {
         const xc = sc;
         const yc = sc;
-        const zc = sc*10;
-
+        const zc = sc/(3*(minmax_data[1].u - minmax_data[0].u));
+        
+        c = {
+            x: (basic_data.bounds[1][0] + basic_data.bounds[0][0]) / 2,
+            y: (basic_data.bounds[1][1] + basic_data.bounds[0][1]) / 2}
+            
         mesh_data.forEach((e)=>{
             var geometry = new THREE.Geometry();
-            var v0 = new THREE.Vector3((e[0].x-0.5)*xc, (e[0].y-0.5)*yc, e[0].u*zc);
-            var v1 = new THREE.Vector3((e[1].x-0.5)*xc, (e[1].y-0.5)*yc, e[1].u*zc);
-            var v2 = new THREE.Vector3((e[2].x-0.5)*xc, (e[2].y-0.5)*yc, e[2].u*zc);
+            var v0 = new THREE.Vector3((e[0].x-c.x)*xc, (e[0].y-c.y)*yc, e[0].u*zc);
+            var v1 = new THREE.Vector3((e[1].x-c.x)*xc, (e[1].y-c.y)*yc, e[1].u*zc);
+            var v2 = new THREE.Vector3((e[2].x-c.x)*xc, (e[2].y-c.y)*yc, e[2].u*zc);
             
             var triangle = new THREE.Triangle(v0, v1, v2);
             var normal = triangle.normal();
@@ -245,9 +252,22 @@ $(document).ready(function () {
             console.log(xhr);
         })
     }
+
+    function basic_ajax() {
+        return $.ajax({
+            url: './basic',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            basic_data = m;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
     
 
-    $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
+    $.when(mesh_ajax(), vertex_ajax(), edge_ajax(), basic_ajax()).done(function () {
         mydraw()
     })
 
@@ -313,12 +333,19 @@ $(document).ready(function () {
 
 // 2D Draw
 function mydraw() {
-    const sc = 500;
+    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+    const sc = 500/ max;
     const w = 1 * sc;
     const h = -1 * sc;
     draw.clear()
     $("#new_plot > svg").attr('height','');
-    draw.viewbox({ x: -0.05 * sc, y: -0.05 * sc, width: 1.1 * sc, height: 1.1 * sc })
+
+    draw.viewbox({ 
+        x: (-0.05 + basic_data.bounds[0][0]) * sc
+      , y: (-0.05) * sc
+      , width: (basic_data.bounds[1][0] - basic_data.bounds[0][0] + 0.1) * sc,
+       height: (basic_data.bounds[1][1] - basic_data.bounds[0][1] + 0.1) * sc })
+
     var color = new SVG.Color('#0000ff').morph('#ff0000')
     
     if ($("#mesh").is(':checked')){

@@ -234,6 +234,18 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
         res.set_content(jsonstr, "application/json");
     });
 
+    svr.Get("/basic", [x0, y0, x1, y1](const Request &req, Response &res) {
+        stringstream json;
+        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) ;
+        json << "{" << endl;
+        json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl; 
+        json << "           [" << x1 << "," << y1 << "]]" << endl;
+        json << "}" << endl;
+        string jsonstr;
+        jsonstr = json.str();
+        res.set_content(jsonstr, "application/json");
+    });
+
     return true;
 }
 
