@@ -341,10 +341,10 @@ function mydraw() {
     $("#new_plot > svg").attr('height','');
 
     draw.viewbox({ 
-        x: (-0.05 + basic_data.bounds[0][0]) * sc
-      , y: (-0.05) * sc
-      , width: (basic_data.bounds[1][0] - basic_data.bounds[0][0] + 0.1) * sc,
-       height: (basic_data.bounds[1][1] - basic_data.bounds[0][1] + 0.1) * sc })
+        x: (-0.05 * max + basic_data.bounds[0][0]) * sc
+      , y: (-0.05 * max) * sc
+      , width: (basic_data.bounds[1][0] - basic_data.bounds[0][0] + 0.1 * max) * sc,
+       height: (basic_data.bounds[1][1] - basic_data.bounds[0][1] + 0.1 * max) * sc })
 
     var color = new SVG.Color('#0000ff').morph('#ff0000')
     
