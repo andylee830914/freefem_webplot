@@ -4,12 +4,14 @@ body > .container {
 form {
     padding-top: 10px;
 }
-.dashboard{
+.dashboard{ 
     margin: 20px;
     padding: 25px 25px;
+    background-color: rgba(215, 215, 215, 0.8) !important;
 }
 .controlbox{
     padding-top: 25px;
+    font-size: 15pt;
 }
 .subcheck{
     margin-left: 2em;
