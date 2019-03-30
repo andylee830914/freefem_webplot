@@ -41,34 +41,14 @@ double myserver()
                             std::istreambuf_iterator<char>());
         res.set_content(hp_html, "text/html");
     });
-    cout << "server started" << endl;
+    cout << endl;
+    cout << "Starting server at http://localhost:1234/" << endl;
+    cout << "Quit the server with CONTROL-C." << endl;
     svr.listen("localhost", 1234);
 
     return 0.0;
 }
 
-// bool mywebplot(    Stack stack,
-//                     KN<double> *const &pu,
-//                     Fem2D::Mesh const * const &pTh)
-// {
-//     const Fem2D::Mesh &Th(*pTh);
-//     KN<double> &u(*pu);
-//     // cout << (size(u) )<<endl;
-
-//     // ajax API part
-//     svr.Get("/hi", [](const Request &req, Response &res) {
-//         res.set_content("<svg height=\"250\" width=\"500\"><polygon points=\"220,10 300,210 170,250 123,234\" style=\"fill:lime;stroke:purple;stroke-width:1\" />Sorry, your browser does not support inline SVG.</svg>", "text/html");
-//     });
-
-
-
-//     svr.Get(R"(/hello/(\d+))", [](const Request &req, Response &res) {
-//         auto numbers = req.matches[1];
-//         res.set_content(numbers, "text/plain");
-//     });
-
-//     return true;
-// }
 
 class WEBPLOT_Op : public E_F0mps
 {
@@ -178,7 +158,8 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     string jsonstr;
     jsonstr = json.str();
 
-    cout << myfmin << "," << myfmax << endl;
+    // cout << myfmin << "," << myfmax << endl;
+
     svr.Get("/mesh", [jsonstr](const Request &req, Response &res) {
         // generate element(triangle) JSON
         res.set_content(jsonstr, "application/json");
