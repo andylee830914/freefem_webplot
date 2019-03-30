@@ -124,7 +124,7 @@ function init() {
     controls = new THREE.OrbitControls(camera);
     scene = new THREE.Scene();
     mygenerate();
-
+    // scene.add(new THREE.AxesHelper(frustumSize));
     var theatre = document.getElementById("new_plot")
 
     renderer = new THREE.WebGLRenderer({ alpha: true , preserveDrawingBuffer: true });
@@ -254,6 +254,8 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+
+
 $(document).ready(function () {    
 
     function mesh_ajax() {
@@ -342,12 +344,14 @@ $(document).ready(function () {
         text = $('#new_plot > svg')[0].outerHTML;
         var file = new Blob([text], { type: 'image/svg+xml' });
         var canvas = document.getElementById('temp_canvas');
-        $(canvas).attr('width','1024').attr('height','1024');
+        var box = draw.viewbox();
+
+        $(canvas).attr('width', 1024 * box.width / box.height).attr('height','1024');
         var ctx = canvas.getContext('2d');
         var img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = function () {
-            ctx.drawImage(img, 0, 0,1024,1024);
+            ctx.drawImage(img, 0, 0, 1024 * box.width / box.height, 1024);
             var imgURI = canvas.toDataURL('image/png')
             blob = dataURItoBlob(imgURI)
             var w = window.open(URL.createObjectURL(blob), 'test.png');
@@ -385,6 +389,7 @@ $(document).ready(function () {
 
     });
 
+
     
     
 });
@@ -396,7 +401,7 @@ function mydraw() {
     const w = 1 * sc;
     const h = -1 * sc;
     draw.clear()
-    
+
     $("#new_plot > svg").attr('height','');
 
     
