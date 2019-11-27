@@ -2,3 +2,4 @@ myserver.dylib
 test.o
 test.edp
 *.ps
+test/*
