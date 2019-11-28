@@ -1,6 +1,6 @@
 //initial for 3D
 var frustumSize;
-var camera, scene, renderer, mesh, mesh_border, axis;
+var camera, scene, renderer, mesh, mesh_border, axes;
 var controls;
 
 
@@ -25,8 +25,8 @@ function init() {
     camera.position.set(0, 0, frustumSize);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
-    axis = new THREE.AxesHelper(frustumSize);
-    axis.material.linewidth = 5;
+    axes = new THREE.AxesHelper(frustumSize);
+    axes.material.linewidth = 5;
     
     var theatre = document.getElementById("new_plot")
     renderer.setPixelRatio(1);
@@ -40,7 +40,7 @@ function init() {
 function mygenerate() {
     scene.remove(mesh);
     scene.remove(mesh_border);
-    scene.remove(axis);
+    scene.remove(axes);
     const sc = 1000;
     const xc = sc;
     const yc = sc;
@@ -166,8 +166,8 @@ function mygenerate() {
         scene.add(mesh_border);
     }
 
-    if ($("#axis3d").is(':checked')){
-        scene.add(axis);
+    if ($("#axes3d").is(':checked')){
+        scene.add(axes);
     }
 
 }
