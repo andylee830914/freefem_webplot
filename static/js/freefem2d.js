@@ -31,30 +31,33 @@ $('#2dpng').click(function () {
 });
 
 // 2D Draw
-function mydraw() {
-    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+function mydraw2d() {
+    var max_x = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+    var max_y = basic_data.bounds[1][1] - basic_data.bounds[0][1];
+    var max = Math.max(max_x,max_y);
+    // var max = max_y;
     const sc = 500 / max;
     const w = 1 * sc;
     const h = -1 * sc;
     draw.clear()
 
-    $("#new_plot > svg").attr('height', '');
+    $("#new_plot > svg").removeAttr('height');
 
 
     if ($("#level").is(':checked') && $("#colorbar").is(':checked')) {
-        draw_viewbox_w_scale = 0.32;
+        draw_viewbox_w_scale = 0.02 * max_y * 10;
         draw_colorbox = true;
     } else {
-        draw_viewbox_w_scale = 0.1;
+        draw_viewbox_w_scale = 0;
         draw_colorbox = false;
 
     }
 
     draw.viewbox({
-        x: (-0.05 * max + basic_data.bounds[0][0]) * sc
-        , y: (-0.05 * max) * sc
-        , width: (basic_data.bounds[1][0] - basic_data.bounds[0][0] + draw_viewbox_w_scale * max) * sc,
-        height: (basic_data.bounds[1][1] - basic_data.bounds[0][1] + 0.1 * max) * sc
+        x: (-0.05 * max_x + basic_data.bounds[0][0]) * sc
+        , y: (-0.05 * max_y) * sc
+        , width: (1.1 * max_x + draw_viewbox_w_scale) * sc,
+        height: (1.1 * max_y) * sc
     })
 
     var gradient = draw.gradient('linear', function (stop) {
@@ -126,9 +129,10 @@ function mydraw() {
 
     if ($("#level").is(':checked') && typeof mesh_data !== 'undefined') {
         if (draw_colorbox) {
-            var rect = draw.rect((basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc, 0.02 * max * sc).fill(gradient)
-                .rotate(270, basic_data.bounds[0][0] * w + (basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc, 0)
-                .move(basic_data.bounds[0][0] * w, 0.05 * sc);
+            var rect = draw.rect(max_y * sc, 0.02 * max_y * sc).fill(gradient)
+                .attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w)
+                .attr('y', (basic_data.bounds[1][1] - basic_data.bounds[0][1]-0.02*max_y) * sc)
+                .rotate(270, (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w, (basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc)
         }
 
 
@@ -152,14 +156,14 @@ function mydraw() {
 
         for (let vi = 0; vi < vlevel.length; vi++) {
             const ve = vlevel[vi];
-            text_space = max / nlevel;
+            text_space = max_y / nlevel;
             cr = 4 * vi / nlevel;
             ci = Math.floor(cr);
             if (ci == 4) {
                 ci = ci - 1;
             }
             if ((vi == 0 || vi == vlevel.length - 1 || vi % 2 == 0) && draw_colorbox) {
-                var text = draw.plain(vlevel[vi].toExponential(3)).attr('x', (basic_data.bounds[1][0] + 0.1) * w + 30).attr('y', (basic_data.bounds[1][1] - text_space * (vlevel.length - vi - 1)) * h - h)
+                var text = draw.plain(vlevel[vi].toExponential(3)).attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale-0.03*max_y) * w).attr('y', (basic_data.bounds[1][1] - text_space * (vlevel.length - vi - 1)) * h - h)
                     .font({
                         size: 0.03 * sc + "px",
                         anchor: 'middle',

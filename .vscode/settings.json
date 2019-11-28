@@ -63,6 +63,25 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "__functional_03": "cpp",
+        "__errc": "cpp",
+        "__hash_table": "cpp",
+        "__node_handle": "cpp",
+        "array": "cpp",
+        "bit": "cpp",
+        "clocale": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "numeric": "cpp",
+        "optional": "cpp",
+        "random": "cpp",
+        "shared_mutex": "cpp",
+        "unordered_map": "cpp",
+        "*.tcc": "cpp",
+        "memory_resource": "cpp",
+        "cinttypes": "cpp",
+        "filesystem": "cpp"
     }
 }

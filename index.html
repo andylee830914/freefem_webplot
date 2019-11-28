@@ -39,6 +39,25 @@
                     </div>
                     <div id="new_plot" style="text-align: center"></div>
                 </div>
+                <div class="d-flex justify-content-center">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination" id="img-select">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item">
+                                        <a class="page-link" href="#"  onclick="previous()">Previous</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" id="nowpage">1/1</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#" onclick="next()">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </ul>
+                    </nav>
+                </div>
             </div>
             <div class="col-4">
                 <div class="dropdown">
@@ -94,9 +113,12 @@
                             <label class="form-check-label" for="axes3d">axes</label>
                         </div>
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary" onclick="view(0,0,frustumSize)">XY</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="view(frustumSize,0,0)">YZ</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="view(0,frustumSize,0)">XZ</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="view(0,0,frustumSize)">XY</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="view(frustumSize,0,0)">YZ</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                onclick="view(0,frustumSize,0)">XZ</button>
                         </div>
                         <br>
                         <br>
@@ -125,74 +147,125 @@
     var cprofile3 = ["#955BA5", "#2D95BF", "#4EBA6F", "#F0C419", "#F15A5A"];
 
     var cprofile = cprofile3;
+    var now_file = 1;
+    var total_file = 0;
 
-    $(document).ready(function () {
-        function mesh_ajax() {
-            return $.ajax({
-                url: './mesh',
-                type: 'GET'
-            }).done((m) => {
-                console.log(m);
-                mesh_data = m;
-            }).fail((xhr, status, error) => {
-                console.log("Status: " + status + " Error: " + error);
-                console.log(xhr);
-            })
-        }
-
-        function vertex_ajax() {
-            return $.ajax({
-                url: './vertex',
-                type: 'GET'
-            }).done((m) => {
-                console.log(m);
-                vertex_data = m.position;
-                minmax_data = m.minmax;
-            }).fail((xhr, status, error) => {
-                console.log("Status: " + status + " Error: " + error);
-                console.log(xhr);
-            })
-        }
-
-        function edge_ajax() {
-            return $.ajax({
-                url: './edge',
-                type: 'GET'
-            }).done((m) => {
-                console.log(m);
-                edge_data = m;
-            }).fail((xhr, status, error) => {
-                console.log("Status: " + status + " Error: " + error);
-                console.log(xhr);
-            })
-        }
-
-        function basic_ajax() {
-            return $.ajax({
-                url: './basic',
-                type: 'GET'
-            }).done((m) => {
-                console.log(m);
-                basic_data = m;
-                init();
-                animate();
-                $("#new_plot").children("canvas").hide();
-            }).fail((xhr, status, error) => {
-                console.log("Status: " + status + " Error: " + error);
-                console.log(xhr);
-            })
-        }
-        basic_ajax();
-
+    function reload() {
+        // basic_ajax();
         $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
-            mydraw();
+            mydraw2d();
+            mydraw3d();
         })
+    }
+    function mesh_ajax() {
+        return $.ajax({
+            url: './cache/mesh' + now_file + '.json',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            mesh_data = m.mesh;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
 
+    function vertex_ajax() {
+        return $.ajax({
+            url: './cache/vertex' + now_file + '.json',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            vertex_data = m.position;
+            minmax_data = m.minmax;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function edge_ajax() {
+        return $.ajax({
+            url: './cache/edge' + now_file + '.json',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            edge_data = m.edge;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function basic_ajax() {
+        return $.ajax({
+            url: './cache/basic.json',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m);
+            basic_data = m;
+            $("#new_plot").children("canvas").remove();
+            init();
+            animate();
+            reload();
+            if ($('#3dstart').text() == '2D') {
+                $("#new_plot").children("canvas").hide();
+            }
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function get_picnum_ajax() {
+        return $.ajax({
+            url: './total_temp',
+            type: 'GET'
+        }).done((m)=>{
+            total_file = m.total;
+            $("#nowpage").text(now_file+'/'+total_file);
+
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function setnowpage(page) {
+        if (now_file != page) {
+            now_file = page;
+            $("#nowpage").text(now_file+'/'+total_file);
+            now_file = page;
+            reload();
+        }
+    }
+
+    function next() {
+        var temp_now_file = now_file + 1;
+        if (temp_now_file >= total_file) {
+            temp_now_file = total_file;
+        }
+        setnowpage(temp_now_file);
+    }
+
+    function previous() {
+        var temp_now_file = now_file - 1;
+        if (temp_now_file <= 0) {
+            temp_now_file = 1;
+        }
+        setnowpage(temp_now_file);
+    }
+    $(document).ready(function () {
+        basic_ajax();
+        get_picnum_ajax();
+
+
+        //update draw
         $("#control").find('input[type="checkbox"]').change(function () {
             if ($("#3dstart").text() == '2D') {
-                mydraw();
+                mydraw2d();
             } else {
-                mygenerate();
+                mydraw3d();
             }
         });
 
@@ -202,21 +275,21 @@
             if ($("#new_plot").children("svg").is(":hidden")) {
                 //2D mode
                 $(this).text('2D');
-                $("#new_plot").children("svg").show();
-                mydraw();
                 $("#new_plot").children("canvas").hide();
+                $("#new_plot").children("svg").show();
                 $('#2d_control').show();
                 $('#3d_control').hide();
+                // mydraw2d();
                 // disenable camera orbit control
                 controls.enabled = false;
             } else {
                 //3D mode
                 $(this).text('3D');
-                $("#new_plot").children("canvas").show();
-                mygenerate();
                 $("#new_plot").children('svg').hide();
+                $("#new_plot").children("canvas").show();
                 $('#2d_control').hide();
                 $('#3d_control').show();
+                // mydraw3d();
                 // enable camera orbit control
                 controls.enabled = true;
             }

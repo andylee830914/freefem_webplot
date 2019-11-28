@@ -2,19 +2,22 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
 #include "AFunction_ext.hpp"
 #endif
 using namespace std;
-
+using namespace filesystem;
 using namespace Fem2D;
 using namespace httplib;
 Server svr;
 
 namespace{
     const char DEFAULT_FETYPE[] = "P1";
+    const char BASE_DIR[] =  "./static";
+    int plotcount = 0;
 }
 
 std::string get_string(Stack stack, Expression e, const char *const DEFAULT)
@@ -33,14 +36,23 @@ std::string get_string(Stack stack, Expression e, const char *const DEFAULT)
 
 double myserver()
 {
+    svr.set_base_dir(BASE_DIR);
 
-    svr.set_base_dir("./static");
     svr.Get("/", [](const Request &req, Response &res) {
         ifstream ifs("index.html");
         std::string hp_html((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
         res.set_content(hp_html, "text/html");
     });
+
+    svr.Get("/total_temp", [](const Request &req, Response &res) {
+        stringstream json;
+        json << "{ \"total\" :" << plotcount << "}" << endl;
+        string jsonstr;
+        jsonstr = json.str();
+        res.set_content(jsonstr, "application/json");
+    });
+
     cout << endl;
     cout << "Starting server at http://localhost:1234/" << endl;
     cout << "Quit the server with CONTROL-C." << endl;
@@ -84,7 +96,8 @@ basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
 AnyType WEBPLOT_Op::operator()(Stack stack) const
 {
     const std::string fetype = get_string(stack, nargs[0], DEFAULT_FETYPE);
-
+    plotcount = plotcount+1;
+    std::cout << "active : " << plotcount << std::endl;
     const Mesh *const pTh = GetAny<const Mesh *const>((*eTh)(stack));
     ffassert(pTh);
     const Fem2D::Mesh &Th(*pTh);
@@ -114,8 +127,11 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
         std::cout << "plotPDF() : Interpolated as P1 (piecewise-linear)" << std::endl;
     }
 
-    stringstream json;
-    json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
+    std::ostringstream mesh_name;
+    mesh_name << BASE_DIR << "/cache/mesh" << plotcount << ".json";
+    std::ofstream mesh_json(mesh_name.str());
+    mesh_json << "{ \"mesh\" :" << endl;
+    mesh_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
     for (int it = 0; it < Th.nt; it++)
     {
         for (int iv = 0; iv < 3; iv++)
@@ -124,9 +140,9 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
             int i = Th(it, iv);
 
             if (iv == 0){
-                json << "  [ ";
+                mesh_json << "[ ";
             }else{
-                json << "    ";
+                mesh_json << "  ";
             }
             MeshPointStack(stack)->setP(pTh, it, iv);
             double temp = GetAny<double>((*ef)(stack)); // Expression ef is atype<double>()
@@ -139,93 +155,87 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
                 Mi = i;
                 myfmax = temp;
             }
-            json << "{\"index\":" << i << ",\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << temp << "}";
+            mesh_json << "{\"index\":" << i << ",\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << temp << "}";
 
             if (iv != 2){
-                json << "," << endl;
+                mesh_json << "," << endl;
             }else{
-                json << "]" << endl;
+                mesh_json << "]" << endl;
             }
 
         }
         if (it != Th.nt - 1)
         {
-            json << ",";
+            mesh_json << ",";
         }
-        json << endl;
+        mesh_json << endl;
     }
-    json << "]" << endl;
-    string jsonstr;
-    jsonstr = json.str();
-
+    mesh_json << "  ]" << endl;
+    mesh_json << "}" << endl;
+    mesh_json.close();
     // cout << myfmin << "," << myfmax << endl;
 
-    svr.Get("/mesh", [jsonstr](const Request &req, Response &res) {
-        // generate element(triangle) JSON
-        res.set_content(jsonstr, "application/json");
-    });
+    std::ostringstream vertex_name;
+    vertex_name << BASE_DIR << "/cache/vertex" << plotcount << ".json";
+    std::ofstream vertex_json(vertex_name.str());
 
-    svr.Get("/vertex", [&, mi,Mi,myfmin, myfmax](const Request &req, Response &res) {
-        // generate vertices JSON
-        stringstream json;
-        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) ;
-        json << "{" << endl;
-        json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
-        json << "             {\"id\":" << Mi << ",\"u\":" << myfmax << "}]," << endl;
+    vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
+    vertex_json << "{" << endl;
+    vertex_json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
+    vertex_json << "             {\"id\":" << Mi << ",\"u\":" << myfmax << "}]," << endl;
 
-        json << "  \"position\": [" << endl;
-        for (int i = 0; i < Th.nv; i++)
+    vertex_json << "  \"position\": [" << endl;
+    for (int i = 0; i < Th.nv; i++)
+    {
+        vertex_json << "    {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << "}";
+        if (i != Th.nv - 1)
         {
-            json << "    {\"x\":" << Th(i).x << ",\"y\":" << Th(i).y <<  "}";
-            if (i != Th.nv - 1)
-            {
-                json << ",";
-            }
-            json << endl;
+            vertex_json << ",";
         }
-        json << "  ]" << endl;
-        json << "}" << endl;
+        vertex_json << endl;
+    }
+    vertex_json << "  ]" << endl;
+    vertex_json << "}" << endl;
+    vertex_json.close();
 
-        string jsonstr;
-        jsonstr = json.str();
-        res.set_content(jsonstr, "application/json");
-    });
-
-    svr.Get("/edge", [&](const Request &req, Response &res) {
-        // generate edge JSON
-        stringstream json;
-        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "[" << endl;
-        for (int i = 0; i < Th.neb; i++)
+    std::ostringstream edge_name;
+    edge_name << BASE_DIR << "/cache/edge" << plotcount << ".json";
+    std::ofstream edge_json(edge_name.str());
+    edge_json << "{ \"edge\" :" << endl;
+    edge_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
+    for (int i = 0; i < Th.neb; i++)
+    {
+        const int &v0 = Th(Th.bedges[i][0]);
+        const int &v1 = Th(Th.bedges[i][1]);
+        edge_json << "    { \"label\": " << Th.be(i) << "," << endl;
+        edge_json << "      \"vertices\":[{\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y << "}," << endl;
+        edge_json << "                  {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << "}]" << endl;
+        edge_json << "    }";
+        if (i != Th.neb - 1)
         {
-            const int &v0 = Th(Th.bedges[i][0]);
-            const int &v1 = Th(Th.bedges[i][1]);
-            json << "  { \"label\": " << Th.be(i) << "," << endl;
-            json << "    \"vertices\":[{\"x\":" << Th(v0).x << ",\"y\":" << Th(v0).y  << "}," << endl;
-            json << "                {\"x\":" << Th(v1).x << ",\"y\":" << Th(v1).y << "}]" << endl;
-            json << "  }";
-            if (i != Th.neb - 1)
-            {
-                json << ",";
-            }
-            json << endl;
+            edge_json << ",";
         }
-        json << "]" << endl;
-        string jsonstr;
-        jsonstr = json.str();
-        res.set_content(jsonstr, "application/json");
-    });
+        edge_json << endl;
+    }
+    edge_json << "  ]" << endl;
+    edge_json << "}" << endl;
 
-    svr.Get("/basic", [x0, y0, x1, y1](const Request &req, Response &res) {
-        stringstream json;
-        json << std::setiosflags(std::ios::scientific) << std::setprecision(16) ;
-        json << "{" << endl;
-        json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl; 
-        json << "           [" << x1 << "," << y1 << "]]" << endl;
-        json << "}" << endl;
-        string jsonstr;
-        jsonstr = json.str();
-        res.set_content(jsonstr, "application/json");
-    });
+    edge_json.close();
+
+    if (plotcount == 1)
+    {
+        std::ostringstream basic_name;
+        basic_name << BASE_DIR << "/cache/basic.json";
+        std::ofstream basic_json(basic_name.str());
+
+        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
+        basic_json << "{" << endl;
+        basic_json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl;
+        basic_json << "           [" << x1 << "," << y1 << "]]" << endl;
+        basic_json << "}" << endl;
+        basic_json.close();
+    }
+
 
     return true;
 }
@@ -251,6 +261,12 @@ class WEBPLOT : public OneOperator
 };
 
 static void init(){
+    std::ostringstream path;
+    path << BASE_DIR << "/cache/";
+    for (const auto &entry : directory_iterator(path.str()))
+    {
+        remove(entry.path());
+    }
     Global.Add("server", "(", new OneOperator0<double>(myserver));
     Global.Add("webplot", "(", new WEBPLOT(0));
 }

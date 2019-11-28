@@ -21,7 +21,12 @@ form {
     padding-right: 25px;
     padding-bottom: 5px;
 }
+#new_plot > svg {
+    width: 75% !important;
+    height: auto !important;
+}
+
 #new_plot > canvas {
-    width: 100% !important;
+    width: 75% !important;
     height: auto !important;
 }

@@ -37,7 +37,7 @@ function init() {
 
 }
 
-function mygenerate() {
+function mydraw3d() {
     scene.remove(mesh);
     scene.remove(mesh_border);
     scene.remove(axes);

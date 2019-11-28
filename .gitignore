@@ -3,3 +3,4 @@ test.o
 test.edp
 *.ps
 test/*
+static/cache/*
