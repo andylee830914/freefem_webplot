@@ -7,7 +7,7 @@ border bf(t=0.0,1) { x=0;   y=1-t; label=1; };
 
 mesh Th = buildmesh( ba(6)+bb(4)+bc(4)+bd(4)+be(4)+bf(6) );
 
-fespace Vh(Th,P1);
+fespace Vh(Th,P1);//P1 P1nc
 Vh u,v;
 func f = 1;
 
@@ -15,6 +15,7 @@ solve Poisson(u,v)
   = int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))
     - int2d(Th)(f*v) + on(1,u=0);
 
+// plot(u);
 load "myserver"
 webplot(u,Th);
 server();

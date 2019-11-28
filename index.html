@@ -13,15 +13,11 @@
     <script src="js/svg.min.js"></script>
 
     <script src="js/three.min.js"></script>
-    <script src="js/OrbitControls.js"></script>  
+    <script src="js/OrbitControls.js"></script>
     <script src="js/data2blob.js"></script>
 
     <!-- <script src="js/CSS3DRenderer.js"></script> -->
     <!-- <script async src="mathjax/MathJax.js"></script> -->
-
-
-
-    <!-- Latest compiled and minified JavaScript -->
     <title>FreeFem++</title>
 </head>
 
@@ -34,12 +30,14 @@
             <div class="col-8">
                 <div id="dashboard_new" class="dashboard jumbotron">
                     <div class="row plot_title">
-                        <div class="d-flex flex-fill align-items-center"><h6>Output</h6></div>
+                        <div class="d-flex flex-fill align-items-center">
+                            <h6>Output</h6>
+                        </div>
                         <div class="d-flex justify-content-end align-items-center">
                             <button type="button" class="btn btn-outline-secondary" id="3dstart">2D</button>
                         </div>
                     </div>
-                    <div id="new_plot" style="text-align: center" ></div>
+                    <div id="new_plot" style="text-align: center"></div>
                 </div>
             </div>
             <div class="col-4">
@@ -48,42 +46,64 @@
                 </div>
 
                 <form id="control" class="controlbox">
-                    <h6>Preference</h6>
-                    <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="mesh" checked>
-                        <label class="form-check-label" for="mesh">mesh</label>
+                    <div id="2d_control">
+                        <h6>Preference</h6>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="mesh" checked>
+                            <label class="form-check-label" for="mesh">mesh</label>
+                        </div>
+                        <div class="form-group form-check subcheck">
+                            <input type="checkbox" class="form-check-input" id="tri_index">
+                            <label class="form-check-label" for="tri_index">index of triangles</label>
+                        </div>
+                        <div class="form-group form-check subcheck">
+                            <input type="checkbox" class="form-check-input" id="ver_index">
+                            <label class="form-check-label" for="ver_index">index of vertices</label>
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="edg_label">
+                            <label class="form-check-label" for="edg_label">label of edges</label>
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="level" checked>
+                            <label class="form-check-label" for="level">isoline</label>
+                        </div>
+                        <div class="form-group form-check subcheck">
+                            <input type="checkbox" class="form-check-input" id="colorbar" checked>
+                            <label class="form-check-label" for="colorbar">colorbar</label>
+                        </div>
+                        <h6>Download</h6>
+                        <div class="btn-group" role="group" aria-label="Basic example" id="2d_download_btn">
+                            <a href="#" class="btn btn-outline-primary" id="2dsvg">SVG</a>
+                            <a href="#" class="btn btn-outline-primary 2d_output" id="2dpng">PNG</a>
+                        </div>
                     </div>
-                    <div class="form-group form-check subcheck">
-                        <input type="checkbox" class="form-check-input" id="tri_index">
-                        <label class="form-check-label" for="tri_index">index of triangles <span class="badge badge-secondary">2D</span></label>
-                    </div>
-                    <div class="form-group form-check subcheck">
-                        <input type="checkbox" class="form-check-input" id="ver_index">
-                        <label class="form-check-label" for="ver_index">index of vertices <span class="badge badge-secondary">2D</span></label>
-                    </div>
-                    <div class="form-group form-check  subcheck">
-                        <input type="checkbox" class="form-check-input" id="wireframe">
-                        <label class="form-check-label" for="wireframe">wireframe <span class="badge badge-secondary">3D</span></label>
-                    </div>
-                    <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="edg_label">
-                        <label class="form-check-label" for="edg_label">label of edges <span class="badge badge-secondary">2D</span></label>
-                    </div>
-                    <div class="form-group form-check">
-                        <input type="checkbox" class="form-check-input" id="level" checked>
-                        <label class="form-check-label" for="level">isoline <span class="badge badge-secondary">2D</span></label>
-                    </div>
-                    <div class="form-group form-check subcheck">
-                        <input type="checkbox" class="form-check-input" id="colorbar" checked>
-                        <label class="form-check-label" for="colorbar">colorbar</label>
-                    </div>
-                </form>
-
-                <form>
-                    <h6>Download</h6>
-                    <div class="btn-group" role="group" aria-label="Basic example" id="download_btn">
-                        <a href="#" class="btn btn-outline-primary" id="dsvg">SVG</a>
-                        <a href="#" class="btn btn-outline-primary" id="dpng">PNG</a>
+                    <div id="3d_control" style="display: none;">
+                        <h6>Preference</h6>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="mesh3d" checked>
+                            <label class="form-check-label" for="mesh3d">mesh</label>
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="wireframe">
+                            <label class="form-check-label" for="wireframe">wireframe</label>
+                        </div>
+                        <h6>Set View</h6>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="axis3d">
+                            <label class="form-check-label" for="axis3d">axis</label>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="view(0,0,frustumSize)">XY</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="view(frustumSize,0,0)">YZ</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="view(0,frustumSize,0)">XZ</button>
+                        </div>
+                        <br>
+                        <br>
+                        <h6>Download</h6>
+                        <div class="btn-group" role="group" id="3d_download_btn">
+                            <a href="#" class="btn btn-outline-primary" id="3dpng">PNG</a>
+                        </div>
                     </div>
                 </form>
 
@@ -94,492 +114,119 @@
 
 </body>
 <script>
-var mesh_data;
-var vertex_data;
-var edge_data;
-var minmax_data;
-var basic_data;
+    var mesh_data;
+    var vertex_data;
+    var edge_data;
+    var minmax_data;
+    var basic_data;
 
-//initial for 2D
-// var colorbar = SVG('new_plot');
-var draw = SVG('new_plot');
+    var cprofile1 = ["#0000ff", "#00ffff", "#00ff00", "#ffff00", "#ff0000"];
+    var cprofile2 = ["#112F41", "#0894A1", "#47AB6C", "#F2B134", "#ED553B"];
+    var cprofile3 = ["#955BA5", "#2D95BF", "#4EBA6F", "#F0C419", "#F15A5A"];
 
-//initial for 3D
-var camera, scene, renderer, mesh, mesh_border;
-var controls
-var cprofile1 = ["#0000ff", "#00ffff", "#00ff00","#ffff00","#ff0000"]
-var cprofile2 = ["#112F41", "#0894A1", "#47AB6C","#F2B134","#ED553B"]
-var cprofile3 = ["#955BA5", "#2D95BF", "#4EBA6F","#F0C419","#F15A5A"]
+    var cprofile = cprofile3;
 
+    $(document).ready(function () {
+        function mesh_ajax() {
+            return $.ajax({
+                url: './mesh',
+                type: 'GET'
+            }).done((m) => {
+                console.log(m);
+                mesh_data = m;
+            }).fail((xhr, status, error) => {
+                console.log("Status: " + status + " Error: " + error);
+                console.log(xhr);
+            })
+        }
 
-var cprofile = cprofile3;
-function init() {
-    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
-    const sc = 1000;
-    var frustumSize = sc+sc/10;
-    var aspect = 1;
-    renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true });    
-    camera = new THREE.OrthographicCamera(frustumSize/-2 * max, frustumSize/2 * max, frustumSize/2 * max, frustumSize/-2 * max, 1, 2*sc);
-    // camera = new THREE.PerspectiveCamera(45, 1, 1, 3*sc);
-    camera.position.set(0, 0, frustumSize);
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    scene = new THREE.Scene();
-    // scene.add(new THREE.AxesHelper(frustumSize));
-    var theatre = document.getElementById("new_plot")
-    renderer.setPixelRatio(1);
-    renderer.setSize(sc, sc);
-    renderer.setClearAlpha(0);
+        function vertex_ajax() {
+            return $.ajax({
+                url: './vertex',
+                type: 'GET'
+            }).done((m) => {
+                console.log(m);
+                vertex_data = m.position;
+                minmax_data = m.minmax;
+            }).fail((xhr, status, error) => {
+                console.log("Status: " + status + " Error: " + error);
+                console.log(xhr);
+            })
+        }
 
-    theatre.appendChild(renderer.domElement);
-    $(theatre).children('svg').hide();
-    
-}
-function mygenerate() {
-    scene.remove(mesh);
-    scene.remove(mesh_border);
-    const sc = 1000;
-    const xc = sc;
-    const yc = sc;
-    const zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
+        function edge_ajax() {
+            return $.ajax({
+                url: './edge',
+                type: 'GET'
+            }).done((m) => {
+                console.log(m);
+                edge_data = m;
+            }).fail((xhr, status, error) => {
+                console.log("Status: " + status + " Error: " + error);
+                console.log(xhr);
+            })
+        }
 
-    c = {
-        x: (basic_data.bounds[1][0] + basic_data.bounds[0][0]) / 2,
-        y: (basic_data.bounds[1][1] + basic_data.bounds[0][1]) / 2
-    }
-    var geometry = new THREE.BufferGeometry();
-    var vertices = [];
-    var normals = [];
-    var materials = [];
-    var material = new THREE.ShaderMaterial({
-        uniforms: {
-            color1: {
-                value: new THREE.Color(cprofile[0])
-            },
-            color2: {
-                value: new THREE.Color(cprofile[1])
-            },
-            color3: {
-                value: new THREE.Color(cprofile[2])
-            },
-            color4: {
-                value: new THREE.Color(cprofile[3])
-            },
-            color5: {
-                value: new THREE.Color(cprofile[4])
-            },
-            bboxMin: {
-                value: {
-                    'x': vertex_data[minmax_data[0].id].x * xc,
-                    'y': vertex_data[minmax_data[0].id].y * yc,
-                    'z': minmax_data[0].u * zc
-                }
-            },
-            bboxMax: {
-                value: {
-                    'x': vertex_data[minmax_data[1].id].x * xc,
-                    'y': vertex_data[minmax_data[1].id].x * yc,
-                    'z': minmax_data[1].u * zc
-                }
-            }
-        },
-        vertexShader: `
-                            uniform vec3 bboxMin;
-                            uniform vec3 bboxMax;
-                        
-                            varying vec2 vUv;
+        function basic_ajax() {
+            return $.ajax({
+                url: './basic',
+                type: 'GET'
+            }).done((m) => {
+                console.log(m);
+                basic_data = m;
+                init();
+                animate();
+                $("#new_plot").children("canvas").hide();
+            }).fail((xhr, status, error) => {
+                console.log("Status: " + status + " Error: " + error);
+                console.log(xhr);
+            })
+        }
+        basic_ajax();
 
-                            void main() {
-                                vUv.y = (position.z - bboxMin.z) / (bboxMax.z - bboxMin.z);
-                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-                            }
-                        `,
-        fragmentShader: `
-                            uniform vec3 color1;
-                            uniform vec3 color2;
-                            uniform vec3 color3;
-                            uniform vec3 color4;
-                            uniform vec3 color5;
-
-                        
-                            varying vec2 vUv;
-                            
-                            void main() {
-                                if (vUv.y < 0.25){
-                                    gl_FragColor = vec4(mix(color1, color2, 4.0 * vUv.y), 1.0);
-                                }else if (vUv.y >= 0.25 && vUv.y < 0.5){
-                                    gl_FragColor = vec4(mix(color2, color3, 4.0 * vUv.y - 1.0), 1.0);
-                                }else if (vUv.y >= 0.5 && vUv.y < 0.75){
-                                    gl_FragColor = vec4(mix(color3, color4, 4.0 * vUv.y - 2.0), 1.0);
-                                }else{
-                                    gl_FragColor = vec4(mix(color4, color5, 4.0 * vUv.y - 3.0), 1.0);
-                                }
-                            }
-                        `,
-        wireframe: $("#wireframe").is(':checked'),
-        wireframeLinewidth: 1 / 500 * sc,
-    });
-        
-    mesh_data.forEach((e) => {
-        var v0 = new THREE.Vector3((e[0].x - c.x) * xc, (e[0].y - c.y) * yc, e[0].u * zc);
-        var v1 = new THREE.Vector3((e[1].x - c.x) * xc, (e[1].y - c.y) * yc, e[1].u * zc);
-        var v2 = new THREE.Vector3((e[2].x - c.x) * xc, (e[2].y - c.y) * yc, e[2].u * zc);
-        var vg = new THREE.Vector3();
-        vg.add(v0).add(v1).add(v2).multiplyScalar(1 / 3);
-
-        var triangle = new THREE.Triangle(v0, v1, v2);
-        var normal = triangle.getNormal(vg);
-
-        // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
-        material.needsUpdate = true
-        vertices.push(triangle.a.x, triangle.a.y, triangle.a.z);
-        vertices.push(triangle.b.x, triangle.b.y, triangle.b.z);
-        vertices.push(triangle.c.x, triangle.c.y, triangle.c.z);
-        normals.push(normal.x, normal.y, normal.z);
-        normals.push(normal.x, normal.y, normal.z);
-        normals.push(normal.x, normal.y, normal.z);
-        materials.push(material);
-
-    })
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-    geometry.computeBoundingSphere();
-    // var material = new THREE.MeshLambertMaterial({ wireframe: $("#wireframe").is(':checked'), wireframeLinewidth: 1 });
-    mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
-    if (!$("#wireframe").is(':checked') && $("#mesh").is(':checked')) {
-        var material = new THREE.LineBasicMaterial({
-            color: 0x000000,
-            linewidth: 1,
-            linecap: 'round', //ignored by WebGLRenderer
-            linejoin: 'round' //ignored by WebGLRenderer
-        });
-        var wireframe = new THREE.WireframeGeometry(geometry);
-        mesh_border = new THREE.LineSegments(wireframe, material);
-        mesh_border.material.depthTest = false;
-        mesh_border.material.opacity = 0.25;
-        mesh_border.material.transparent = true;
-        scene.add(mesh_border);
-    }
-
-}
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-
-
-
-$(document).ready(function () {    
-
-    function mesh_ajax() {
-        return $.ajax({
-            url: './mesh',
-            type: 'GET'
-        }).done((m) => {
-            console.log(m);
-            mesh_data = m;
-        }).fail((xhr, status, error) => {
-            console.log("Status: " + status + " Error: " + error);
-            console.log(xhr);
+        $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
+            mydraw();
         })
-    }
-    
-    function vertex_ajax() {
-        return $.ajax({
-            url: './vertex',
-            type: 'GET'
-        }).done((m) => {
-            console.log(m);
-            vertex_data = m.position;
-            minmax_data = m.minmax;
-        }).fail((xhr, status, error) => {
-            console.log("Status: " + status + " Error: " + error);
-            console.log(xhr);
-        })
-    }
-    
-    function edge_ajax() {
-        return $.ajax({
-            url: './edge',
-            type: 'GET'
-        }).done((m) => {
-            console.log(m);
-            edge_data = m;
-        }).fail((xhr, status, error) => {
-            console.log("Status: " + status + " Error: " + error);
-            console.log(xhr);
-        })
-    }
 
-    function basic_ajax() {
-        return $.ajax({
-            url: './basic',
-            type: 'GET'
-        }).done((m) => {
-            console.log(m);
-            basic_data = m;
-        }).fail((xhr, status, error) => {
-            console.log("Status: " + status + " Error: " + error);
-            console.log(xhr);
-        })
-    }
-    
-
-    $.when(mesh_ajax(), vertex_ajax(), edge_ajax(), basic_ajax()).done(function () {
-        mydraw()
-    })
-
-    $('input[type="checkbox"]').change(function () {
-        if (!$(this).hasClass("noredraw")) {
-             if ($("#3dstart").text() == '2D') {
+        $("#control").find('input[type="checkbox"]').change(function () {
+            if ($("#3dstart").text() == '2D') {
                 mydraw();
             } else {
-                // console.log("pressed");
                 mygenerate();
-            }
-        }
-       
-        
-    });
-
-    $('#dsvg').click(function(){
-        text = $('#new_plot > svg')[0].outerHTML;
-        var file = new Blob([text], { type: 'image/svg+xml' });
-        // $(this).attr('href', URL.createObjectURL(file))
-        // $(this).attr('target' ,'_blank');
-        // $(this).attr('download','test.svg');
-        var w = window.open(URL.createObjectURL(file),'test.svg');
-    });
-    
-    $('#dpng').click(function () {
-        text = $('#new_plot > svg')[0].outerHTML;
-        var file = new Blob([text], { type: 'image/svg+xml' });
-        var canvas = document.getElementById('temp_canvas');
-        var box = draw.viewbox();
-
-        $(canvas).attr('width', 1024 * box.width / box.height).attr('height','1024');
-        var ctx = canvas.getContext('2d');
-        var img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = function () {
-            ctx.drawImage(img, 0, 0, 1024 * box.width / box.height, 1024);
-            var imgURI = canvas.toDataURL('image/png')
-            blob = dataURItoBlob(imgURI)
-            var w = window.open(URL.createObjectURL(blob), 'test.png');
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            $(canvas).attr('width', '0').attr('height', '0');
-
-        };
-
-    })
-
-    $('#3dstart').click(function(){
-        if($("#new_plot").children("svg").is(":hidden")){
-            //2D mode
-            $(this).text('2D');
-            $("#new_plot").children("svg").show();
-            mydraw();
-            $("#new_plot").children("canvas").remove();
-            $('#3dpng').remove();
-            // disenable camera orbit control
-            controls.enabled = false
-        }else{
-            // controls.enabled = true
-            init();
-            animate();
-            mygenerate();
-            $(this).text('3D');
-            $('#download_btn').append('<a href="#" class="btn btn-outline-primary" id="3dpng">3D PNG</a>');
-            $('#3dpng').click(function () {
-                var canvas = document.querySelector("#new_plot > canvas");
-                canvas.getContext("experimental-webgl", { preserveDrawingBuffer: true });
-                var imgURI = canvas.toDataURL('image/png')   
-                blob = dataURItoBlob(imgURI)
-                var w = window.open(URL.createObjectURL(blob), 'test.png');
-            })
-        }
-
-    });
-
-
-    
-    
-});
-
-// 2D Draw
-function mydraw() {
-    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
-    const sc = 500/ max;
-    const w = 1 * sc;
-    const h = -1 * sc;
-    draw.clear()
-
-    $("#new_plot > svg").attr('height','');
-
-    
-    // if ($("#level").is(':checked')) {
-    //     $("#colorbar").removeAttr("disabled")
-    // }else{
-    //     $("#colorbar").attr("disabled", "disabled")
-    // }
-
-    if ($("#level").is(':checked') && $("#colorbar").is(':checked')) {
-        draw_viewbox_w_scale = 0.32;
-        draw_colorbox = true;
-    } else {
-        draw_viewbox_w_scale = 0.1;
-        draw_colorbox = false;
-
-    }
-
-    draw.viewbox({
-        x: (-0.05 * max + basic_data.bounds[0][0]) * sc
-        , y: (-0.05 * max) * sc
-        , width: (basic_data.bounds[1][0] - basic_data.bounds[0][0] + draw_viewbox_w_scale * max) * sc,
-        height: (basic_data.bounds[1][1] - basic_data.bounds[0][1] + 0.1 * max) * sc
-    })
-
-    var gradient = draw.gradient('linear', function (stop) {
-        stop.at(0, cprofile[0])
-        stop.at(0.25, cprofile[1])
-        stop.at(0.50, cprofile[2])
-        stop.at(0.75, cprofile[3])
-        stop.at(1, cprofile[4])
-
-    })
-
-
-    var color = [
-        new SVG.Color(cprofile[0]).morph(cprofile[1]),
-        new SVG.Color(cprofile[1]).morph(cprofile[2]),
-        new SVG.Color(cprofile[2]).morph(cprofile[3]),
-        new SVG.Color(cprofile[3]).morph(cprofile[4])
-    ]
-
-    
-    if ($("#mesh").is(':checked')){
-        mesh_data.forEach((e, i) => {
-            var polyline = draw.polygon([[e[0].x * w, e[0].y * h - h ], [e[1].x * w, e[1].y * h - h], [e[2].x * w, e[2].y * h - h]])
-            polyline.fill('none').stroke({ width: 1 / 500 * sc })
-            if ($("#tri_index").is(':checked')) {
-                var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h - h)
-                    .font({
-                        size: 0.02 * sc + "px",
-                        anchor: 'middle'
-                    })
             }
         });
 
-        if ($("#ver_index").is(':checked') && typeof vertex_data !== 'undefined') {
-            vertex_data.forEach((e, i) => {
-                var circle = draw.circle(1 / 100 * sc).attr('cx', e.x*w).attr('cy', e.y * h -h);
-                var text = draw.plain(i).attr('x', (e.x - 0.015)*w).attr('y', (e.y + 0.01 - 1) * h )
-                    .font({
-                        size: 0.02 * sc + "px",
-                        anchor: 'middle',
-                        fill: '#0000FF'
-                    })
-            })
 
-        }
-    }else{
-        edge_data.forEach((e, i) => {
-            var line = draw.line(e.vertices[0].x * w, e.vertices[0].y * h - h, e.vertices[1].x * w, e.vertices[1].y * h -h)
-                .stroke({ width: 1 / 500 * sc });
-        })
-    }
-    
-
-
-
-    if ($("#edg_label").is(':checked') && typeof edge_data !== 'undefined') {
-        edge_data.forEach((e, i) => {
-            var line = draw.line(e.vertices[0].x*w, e.vertices[0].y*h-h, e.vertices[1].x*w, e.vertices[1].y*h-h)
-                        .stroke({ width: 1/500 *sc}).stroke({color: '#f06'});
-            var text = draw.plain(e.label).attr('x', (e.vertices[0].x+ e.vertices[1].x)/2 * w - 0.015*sc).attr('y', (e.vertices[0].y+ e.vertices[1].y)/2 * h -h )
-                .font({
-                    size: 0.02*sc+"px",
-                    anchor: 'middle',
-                    fill: '#f06'
-                })
-        })
-
-    }
-
-    if ($("#level").is(':checked') && typeof mesh_data !== 'undefined') {
-        if (draw_colorbox) {
-            var rect = draw.rect((basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc, 0.02 * max * sc).fill(gradient)
-            .rotate(270, basic_data.bounds[0][0] * w + (basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc, 0)
-            .move(basic_data.bounds[0][0] * w, 0.05 * sc);
-        }
-
-
-        nlevel = 20;
-        vlevel = [];
-        eps = 1e-10;
-        dl = (minmax_data[1].u - minmax_data[0].u)/nlevel;
-        // vlevel.push(minmax_data[0].u);
-        for (let i = 0; i <= nlevel; i++) {
-            vlevel.push(minmax_data[0].u+i*dl);
-        }
-
-        if (vlevel[0] > vlevel[1]) {
-            vlevel[0] = vlevel[0] - eps;
-            vlevel[nlevel] = vlevel[nlevel] + eps; 
-        }else{
-            vlevel[0] = vlevel[0] + eps;
-            vlevel[nlevel] = vlevel[nlevel] - eps; 
-        }
-        
-        
-        for (let vi = 0; vi < vlevel.length; vi++) {
-            const ve = vlevel[vi];
-            text_space = max/nlevel;
-            cr = 4 * vi / nlevel;
-            ci = Math.floor(cr);
-            if (ci == 4) {
-                ci = ci - 1;
-            }
-            if ((vi==0 ||vi== vlevel.length-1 || vi%2==0 ) && draw_colorbox) {
-                var text = draw.plain(vlevel[vi].toExponential(3)).attr('x', (basic_data.bounds[1][0] + 0.1 ) * w + 30).attr('y', (basic_data.bounds[1][1] - text_space * (vlevel.length-vi-1)) * h - h)
-                .font({
-                    size: 0.03 * sc + "px",
-                    anchor: 'middle',
-                    fill: color[ci].at(cr - ci).toHex()
-                });
+        //3d switch
+        $('#3dstart').click(function () {
+            if ($("#new_plot").children("svg").is(":hidden")) {
+                //2D mode
+                $(this).text('2D');
+                $("#new_plot").children("svg").show();
+                mydraw();
+                $("#new_plot").children("canvas").hide();
+                $('#2d_control').show();
+                $('#3d_control').hide();
+                // disenable camera orbit control
+                controls.enabled = false;
+            } else {
+                //3D mode
+                $(this).text('3D');
+                $("#new_plot").children("canvas").show();
+                mygenerate();
+                $("#new_plot").children('svg').hide();
+                $('#2d_control').hide();
+                $('#3d_control').show();
+                // enable camera orbit control
+                controls.enabled = true;
             }
 
-            for (let i = 0; i < mesh_data.length; i++) {
-                const e = mesh_data[i];
-                level_line = [];
-                if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
-                    //at 1st edge of the element
-                    rate = (ve - e[0].u)/(e[1].u - e[0].u)
-                    level_line.push([(rate * e[1].x + ( 1 - rate ) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h - h])                    
-                }
-                if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
-                    //at 2nd edge of the element
-                    rate = (ve - e[1].u) / (e[2].u - e[1].u)
-                    level_line.push([(rate * e[2].x + (1 - rate) * e[1].x) * w, (rate * e[2].y + (1 - rate)* e[1].y) * h - h])
-                }
-                if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
-                    //at 3rd edge of the element
-                    rate = (ve - e[2].u) / (e[0].u - e[2].u)
-                    level_line.push([(rate * e[0].x + (1 - rate) * e[2].x) * w, (rate * e[0].y + (1 - rate) * e[2].y) * h - h])
-                }
-  
-                draw.polyline(level_line).fill('none').stroke({ width: 1 / 250 * sc }).stroke({ color: color[ci].at(cr-ci).toHex()  });
-            }
-        }
-    }
+        });
 
-
-    
-}
-
-
+    });
 
 </script>
+<script src="js/freefem2d.js"></script>
+<script src="js/freefem3d.js"></script>
 
 </html>
