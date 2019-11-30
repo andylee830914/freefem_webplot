@@ -10,9 +10,9 @@ border b(t=0, 2.*pi){x=0.3+0.3*cos(t); y=0.3*sin(t); label=2;};
 
 mesh Th = buildmesh(a(50) + b(-30));
 // webplot(a(50) + b(-30),Th ); //plot the borders to see the intersection
-webplot(0,Th); //plot Th then press Enter
+webplot(Th); //plot Th then press Enter
 
-fespace Vh(Th,P2);
+fespace Vh(Th,P1);
 Vh f = sin(pi*x)*cos(pi*y);
 Vh g = sin(pi*x + cos(pi*y));
 
