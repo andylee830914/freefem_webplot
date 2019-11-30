@@ -53,7 +53,6 @@ function mydraw3d() {
     var geometry = new THREE.BufferGeometry();
     var vertices = [];
     var normals = [];
-    var materials = [];
     var material = new THREE.ShaderMaterial({
         uniforms: {
             color1: {
@@ -122,6 +121,8 @@ function mydraw3d() {
         wireframe: $("#wireframe").is(':checked'),
         wireframeLinewidth: 1 / 500 * sc,
     });
+    material.needsUpdate = true
+
 
     mesh_data.forEach((e) => {
         var v0 = new THREE.Vector3((e[0].x - c.x) * xc, (e[0].y - c.y) * yc, e[0].u * zc);
@@ -134,16 +135,15 @@ function mydraw3d() {
         var normal = triangle.getNormal(vg);
 
         // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
-        material.needsUpdate = true
         vertices.push(triangle.a.x, triangle.a.y, triangle.a.z);
         vertices.push(triangle.b.x, triangle.b.y, triangle.b.z);
         vertices.push(triangle.c.x, triangle.c.y, triangle.c.z);
         normals.push(normal.x, normal.y, normal.z);
         normals.push(normal.x, normal.y, normal.z);
         normals.push(normal.x, normal.y, normal.z);
-        materials.push(material);
 
     })
+ 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     geometry.computeBoundingSphere();

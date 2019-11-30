@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <csignal>
 #include <filesystem>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
@@ -33,6 +34,17 @@ std::string get_string(Stack stack, Expression e, const char *const DEFAULT)
     return std::string(carg);
 }
 
+void signalHandler(int signum)
+{
+    cout << "Interrupt signal (" << signum << ") received.\n";
+    std::ostringstream path;
+    path << BASE_DIR << "/cache/";
+    for (const auto &entry : directory_iterator(path.str()))
+    {
+        remove(entry.path());
+    }
+    exit(signum);
+}
 
 double myserver()
 {
@@ -56,6 +68,7 @@ double myserver()
     cout << endl;
     cout << "Starting server at http://localhost:1234/" << endl;
     cout << "Quit the server with CONTROL-C." << endl;
+    signal(SIGINT, signalHandler);
     svr.listen("localhost", 1234);
 
     return 0.0;
@@ -66,6 +79,7 @@ class WEBPLOT_Op : public E_F0mps
 {
   public:
     Expression eTh, ef;
+    Expression zero;
     static const int n_name_param = 1;
     static basicAC_F0::name_and_type name_param[];
     Expression nargs[n_name_param];
@@ -76,9 +90,14 @@ class WEBPLOT_Op : public E_F0mps
     bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
 
   public:
+    WEBPLOT_Op(const basicAC_F0 &args, Expression th)
+    : eTh(th), ef(0)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
 
     WEBPLOT_Op(const basicAC_F0 &args, Expression f, Expression th)
-        : eTh(th), ef(f)
+    : eTh(th), ef(f)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
@@ -97,7 +116,6 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
 {
     const std::string fetype = get_string(stack, nargs[0], DEFAULT_FETYPE);
     plotcount = plotcount+1;
-    std::cout << "active : " << plotcount << std::endl;
     const Mesh *const pTh = GetAny<const Mesh *const>((*eTh)(stack));
     ffassert(pTh);
     const Fem2D::Mesh &Th(*pTh);
@@ -145,21 +163,36 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
                 mesh_json << "  ";
             }
             MeshPointStack(stack)->setP(pTh, it, iv);
-            double temp = GetAny<double>((*ef)(stack)); // Expression ef is atype<double>()
-            if (myfmin >= temp) {
+            // std::cout << it << std::endl;
+            double temp;
+            if(ef)
+            {
+                temp = GetAny<double>((*ef)(stack)); // Expression ef is atype<double>()
+            }
+            else
+            {
+                temp = 0;
+            }
+            
+            if (myfmin >= temp) 
+            {
                 mi = i;
                 myfmin = temp;
             }
             
-            if (myfmax <= temp) {
+            if (myfmax <= temp) 
+            {
                 Mi = i;
                 myfmax = temp;
             }
             mesh_json << "{\"index\":" << i << ",\"x\":" << Th(i).x << ",\"y\":" << Th(i).y << ",\"u\":" << temp << "}";
 
-            if (iv != 2){
+            if (iv != 2)
+            {
                 mesh_json << "," << endl;
-            }else{
+            }
+            else
+            {
                 mesh_json << "]" << endl;
             }
 
@@ -248,12 +281,14 @@ class WEBPLOT : public OneOperator
     const int argc;
 
   public:
-    // WEBPLOT() : OneOperator(atype<long>(), atype<const Mesh *>(), atype<std::string *>()), argc(2) {}
+    WEBPLOT()    : OneOperator(atype<long>(),                  atype<const Mesh *>()), argc(1) {}
     WEBPLOT(int) : OneOperator(atype<long>(), atype<double>(), atype<const Mesh *>()), argc(2) {}
 
     E_F0 *code(const basicAC_F0 &args) const
     {
-        if (argc == 2)
+        if (argc == 1)
+            return new WEBPLOT_Op(args, t[0]->CastTo(args[0]));
+        else if (argc == 2)
             return new WEBPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]));
         else
             ffassert(0);
@@ -261,13 +296,8 @@ class WEBPLOT : public OneOperator
 };
 
 static void init(){
-    std::ostringstream path;
-    path << BASE_DIR << "/cache/";
-    for (const auto &entry : directory_iterator(path.str()))
-    {
-        remove(entry.path());
-    }
     Global.Add("server", "(", new OneOperator0<double>(myserver));
+    Global.Add("webplot", "(", new WEBPLOT);
     Global.Add("webplot", "(", new WEBPLOT(0));
 }
 

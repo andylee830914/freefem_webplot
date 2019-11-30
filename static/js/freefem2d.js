@@ -1,4 +1,4 @@
-var draw = SVG('new_plot');
+var draw = SVG().addTo('#new_plot');
 
 //output btn for 2d SVG
 $('#2dsvg').click(function () {
@@ -39,7 +39,11 @@ function mydraw2d() {
     const sc = 500 / max;
     const w = 1 * sc;
     const h = -1 * sc;
-    draw.clear()
+    try {
+        draw.clear()
+    } catch (error) {
+        console.log(error);
+    }
 
     $("#new_plot > svg").removeAttr('height');
 
@@ -60,28 +64,28 @@ function mydraw2d() {
         height: (1.1 * max_y) * sc
     })
 
-    var gradient = draw.gradient('linear', function (stop) {
-        stop.at(0, cprofile[0])
-        stop.at(0.25, cprofile[1])
-        stop.at(0.50, cprofile[2])
-        stop.at(0.75, cprofile[3])
-        stop.at(1, cprofile[4])
+    var gradient = draw.gradient('linear', function (add) {
+        add.stop(0, cprofile[0])
+        add.stop(0.25, cprofile[1])
+        add.stop(0.50, cprofile[2])
+        add.stop(0.75, cprofile[3])
+        add.stop(1, cprofile[4])
 
     })
 
 
     var color = [
-        new SVG.Color(cprofile[0]).morph(cprofile[1]),
-        new SVG.Color(cprofile[1]).morph(cprofile[2]),
-        new SVG.Color(cprofile[2]).morph(cprofile[3]),
-        new SVG.Color(cprofile[3]).morph(cprofile[4])
+        new SVG.Color(cprofile[0]).to(cprofile[1]),
+        new SVG.Color(cprofile[1]).to(cprofile[2]),
+        new SVG.Color(cprofile[2]).to(cprofile[3]),
+        new SVG.Color(cprofile[3]).to(cprofile[4])
     ]
 
 
     if ($("#mesh").is(':checked')) {
         mesh_data.forEach((e, i) => {
             var polyline = draw.polygon([[e[0].x * w, e[0].y * h - h], [e[1].x * w, e[1].y * h - h], [e[2].x * w, e[2].y * h - h]])
-            polyline.fill('none').stroke({ width: 1 / 500 * sc })
+            polyline.fill('none').stroke({ color: '#000000',width: 1 / 500 * sc })
             if ($("#tri_index").is(':checked')) {
                 var text = draw.plain(i).attr('x', (e[0].x + e[1].x + e[2].x) / 3 * w).attr('y', (e[0].y + e[1].y + e[2].y) / 3 * h - h)
                     .font({
@@ -140,6 +144,10 @@ function mydraw2d() {
         vlevel = [];
         eps = 1e-10;
         dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
+        if (dl == 0) {
+            
+            return;
+        }
         // vlevel.push(minmax_data[0].u);
         for (let i = 0; i <= nlevel; i++) {
             vlevel.push(minmax_data[0].u + i * dl);

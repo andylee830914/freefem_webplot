@@ -17,6 +17,6 @@ solve Poisson(u,v)
 
 // plot(u);
 load "myserver"
-webplot(0,Th);
+webplot(Th);
 webplot(u,Th);
 server();
