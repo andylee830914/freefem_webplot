@@ -92,7 +92,11 @@ function mydraw3d() {
                             varying vec2 vUv;
 
                             void main() {
-                                vUv.y = (position.z - bboxMin.z) / (bboxMax.z - bboxMin.z);
+                                if ((bboxMax.z - bboxMin.z) > 0.0){
+                                    vUv.y = (position.z - bboxMin.z) / (bboxMax.z - bboxMin.z);
+                                }else{
+                                    vUv.y = 0.0;
+                                }
                                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
                             }
                         `,
