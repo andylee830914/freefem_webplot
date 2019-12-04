@@ -2,7 +2,7 @@ var draw = SVG().addTo('#new_plot');
 
 //output btn for 2d SVG
 $('#2dsvg').click(function (e) {
-    text = $('#new_plot > svg')[0].outerHTML;
+    var text = draw.svg();
     var file = new Blob([text], { type: 'image/svg+xml' });
     var url = URL.createObjectURL(file);
     // var w = window.open(url, 'test.svg');
@@ -12,7 +12,7 @@ $('#2dsvg').click(function (e) {
 
 //output btn for 2D PNG
 $('#2dpng').click(function () {
-    text = $('#new_plot > svg')[0].outerHTML;
+    var text = draw.svg();
     var file = new Blob([text], { type: 'image/svg+xml' });
     var canvas = document.getElementById('temp_canvas');
     var box = draw.viewbox();
@@ -20,7 +20,6 @@ $('#2dpng').click(function () {
     // this.download = 'test.png';
 
     var w1 = window.open("", 'test.png'); // to prevent browser block popup window
-
     $(canvas).attr('width', 1024 * box.width / box.height).attr('height', '1024');
     var ctx = canvas.getContext('2d');
     var img = new Image();
