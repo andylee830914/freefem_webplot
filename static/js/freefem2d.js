@@ -13,6 +13,7 @@ $('#2dpng').click(function () {
     var file = new Blob([text], { type: 'image/svg+xml' });
     var canvas = document.getElementById('temp_canvas');
     var box = draw.viewbox();
+    var w1 = window.open("", 'test.png'); // to prevent browser block popup window
 
     $(canvas).attr('width', 1024 * box.width / box.height).attr('height', '1024');
     var ctx = canvas.getContext('2d');
@@ -22,12 +23,10 @@ $('#2dpng').click(function () {
         ctx.drawImage(img, 0, 0, 1024 * box.width / box.height, 1024);
         var imgURI = canvas.toDataURL('image/png')
         blob = dataURItoBlob(imgURI)
-        var w = window.open(URL.createObjectURL(blob), 'test.png');
+        w1.location.href = URL.createObjectURL(blob);
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         $(canvas).attr('width', '0').attr('height', '0');
-
     };
-
 });
 
 // 2D Draw
