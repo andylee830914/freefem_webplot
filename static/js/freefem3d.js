@@ -16,6 +16,10 @@ $('#3dpng').click(function () {
 
 function init() {
     max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+    c = {
+        x: (basic_data.bounds[1][0] + basic_data.bounds[0][0]) / 2,
+        y: (basic_data.bounds[1][1] + basic_data.bounds[0][1]) / 2
+    }
     const sc = 1000;
     frustumSize = sc + sc / 10;
     var aspect = 1;
@@ -27,6 +31,7 @@ function init() {
     scene = new THREE.Scene();
     axes = new THREE.AxesHelper(frustumSize);
     axes.material.linewidth = 5;
+    axes.position.set(-c.x * sc, -c.y * sc, 0); //move center
     
     var theatre = document.getElementById("new_plot")
     renderer.setPixelRatio(1);
@@ -46,10 +51,6 @@ function mydraw3d() {
     const yc = sc;
     const zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
 
-    c = {
-        x: (basic_data.bounds[1][0] + basic_data.bounds[0][0]) / 2,
-        y: (basic_data.bounds[1][1] + basic_data.bounds[0][1]) / 2
-    }
     var geometry = new THREE.BufferGeometry();
     var vertices = [];
     var normals = [];
