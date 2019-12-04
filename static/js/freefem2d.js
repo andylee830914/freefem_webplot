@@ -1,10 +1,13 @@
 var draw = SVG().addTo('#new_plot');
 
 //output btn for 2d SVG
-$('#2dsvg').click(function () {
+$('#2dsvg').click(function (e) {
     text = $('#new_plot > svg')[0].outerHTML;
     var file = new Blob([text], { type: 'image/svg+xml' });
-    var w = window.open(URL.createObjectURL(file), 'test.svg');
+    var url = URL.createObjectURL(file);
+    // var w = window.open(url, 'test.svg');
+    this.download = 'output-' + now_file +'.svg';
+    this.href = url;
 });
 
 //output btn for 2D PNG
@@ -13,6 +16,9 @@ $('#2dpng').click(function () {
     var file = new Blob([text], { type: 'image/svg+xml' });
     var canvas = document.getElementById('temp_canvas');
     var box = draw.viewbox();
+    // var object  = this;
+    // this.download = 'test.png';
+
     var w1 = window.open("", 'test.png'); // to prevent browser block popup window
 
     $(canvas).attr('width', 1024 * box.width / box.height).attr('height', '1024');
@@ -22,8 +28,11 @@ $('#2dpng').click(function () {
     img.onload = function () {
         ctx.drawImage(img, 0, 0, 1024 * box.width / box.height, 1024);
         var imgURI = canvas.toDataURL('image/png')
-        blob = dataURItoBlob(imgURI)
-        w1.location.href = URL.createObjectURL(blob);
+        var blob = dataURItoBlob(imgURI)
+        var url = URL.createObjectURL(blob);
+        w1.location.href = url;
+        // console.log(object);
+        // object.href = url;
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         $(canvas).attr('width', '0').attr('height', '0');
     };
