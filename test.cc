@@ -79,7 +79,6 @@ class WEBPLOT_Op : public E_F0mps
 {
   public:
     Expression eTh, ef;
-    Expression zero;
     static const int n_name_param = 1;
     static basicAC_F0::name_and_type name_param[];
     Expression nargs[n_name_param];
