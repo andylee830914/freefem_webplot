@@ -80,7 +80,7 @@ for(int n = 0; n < 300; n++){
         + on(2, 4, u=0)
         ;
 
-    // webplot(u, Th);
+    webplot(u, Th);
 
     solve pb4v (v, w, init=n, solver=CG, eps=epsv)
         = int2d(Th)(
@@ -116,7 +116,7 @@ for(int n = 0; n < 300; n++){
     // Mesh adaptation
     if (n%50 == 49){
         Th = adaptmesh(Th, [u, v], q, err=0.04, nbvx=100000);
-        // webplot(0,Th);
+        webplot(Th);
         BuildMat // Rebuild mat.
     }
 
