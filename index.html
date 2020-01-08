@@ -199,7 +199,7 @@
 
     function basic_ajax() {
         return $.ajax({
-            url: './cache/basic.json',
+            url: './cache/basic' + now_file + '.json',
             type: 'GET'
         }).done((m) => {
             console.log(m);
@@ -234,6 +234,7 @@
     function setnowpage(page) {
         if (now_file != page) {
             now_file = page;
+            basic_ajax();
             $("#nowpage").text(now_file+'/'+total_file);
             now_file = page;
             reload();

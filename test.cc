@@ -13,6 +13,7 @@ using namespace std;
 using namespace filesystem;
 using namespace Fem2D;
 using namespace httplib;
+
 Server svr;
 
 namespace{
@@ -257,7 +258,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     if (plotcount == 1)
     {
         std::ostringstream basic_name;
-        basic_name << BASE_DIR << "/cache/basic.json";
+        basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json";
         std::ofstream basic_json(basic_name.str());
 
         basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
