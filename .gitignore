@@ -1,6 +1,7 @@
 myserver.dylib
 test.o
-test.edp
+*.edp
+*.msh
 *.ps
 test/*
 static/cache/*
