@@ -178,6 +178,9 @@ function mydraw3d() {
 }
 
 function animate() {
+    if (!pause) {
+        next();
+    }
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }

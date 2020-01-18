@@ -5,6 +5,7 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/dashboard.css">
 
     <script src="js/jquery.min.js"></script>
     <script src="js/popper.min.js"></script>
@@ -22,117 +23,132 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <a class="navbar-brand" href="#">FreeFem++</a>
+    <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+        <a class="navbar-brand col-md-12 mr-0" href="#">
+            <button class="btn btn-outline-dark btn-sm" type="button" id="mytoggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            FreeFem++ 
+        </a>
+        
     </nav>
-    <main role="main" class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-9">
-                <div id="dashboard_new" class="dashboard jumbotron">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+                <div class="sidebar-sticky">
+                    <div class="dropdown">
+
+                    </div>
+
+                    <form id="control" class="controlbox nav flex-column">
+                        <div id="2d_control">
+                            <h6>Preference</h6>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="mesh" checked>
+                                <label class="form-check-label" for="mesh">mesh</label>
+                            </div>
+                            <div class="form-group form-check subcheck">
+                                <input type="checkbox" class="form-check-input" id="tri_index">
+                                <label class="form-check-label" for="tri_index">index of triangles</label>
+                            </div>
+                            <div class="form-group form-check subcheck">
+                                <input type="checkbox" class="form-check-input" id="ver_index">
+                                <label class="form-check-label" for="ver_index">index of vertices</label>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="edg_label">
+                                <label class="form-check-label" for="edg_label">label of edges</label>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="level" checked>
+                                <label class="form-check-label" for="level">isoline</label>
+                            </div>
+                            <div class="form-group form-check subcheck">
+                                <input type="checkbox" class="form-check-input" id="colorbar" checked>
+                                <label class="form-check-label" for="colorbar">colorbar</label>
+                            </div>
+                            <h6>Download</h6>
+                            <div class="btn-group" role="group" aria-label="Basic example" id="2d_download_btn">
+                                <a href="#" class="btn btn-outline-primary" id="2dsvg">SVG</a>
+                                <a href="#" class="btn btn-outline-primary" id="2dpng">PNG</a>
+                            </div>
+                        </div>
+                        <div id="3d_control" style="display: none;">
+                            <h6>Preference</h6>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="mesh3d" checked>
+                                <label class="form-check-label" for="mesh3d">mesh</label>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="wireframe">
+                                <label class="form-check-label" for="wireframe">wireframe</label>
+                            </div>
+                            <h6>Set View</h6>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="axes3d">
+                                <label class="form-check-label" for="axes3d">axes</label>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="view(0,0,frustumSize)">XY</button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="view(frustumSize,0,0)">YZ</button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="view(0,frustumSize,0)">XZ</button>
+                            </div>
+                            <br>
+                            <br>
+                            <h6>Download</h6>
+                            <div class="btn-group" role="group" id="3d_download_btn">
+                                <a href="#" class="btn btn-outline-primary" id="3dpng">PNG</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </nav>
+            <main role="main" class="col-md-10 ml-sm-auto px-4 dashboard">
+                <div id="dashboard_new" class="">
                     <div class="row plot_title">
                         <div class="d-flex flex-fill align-items-center">
                             <h6>Output</h6>
                         </div>
                         <div class="d-flex justify-content-end align-items-center">
-                            <button type="button" class="btn btn-outline-secondary" id="3dstart">2D</button>
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination" id="img-select">
+
+                                    <nav aria-label="Page navigation example">
+                                        <ul class="pagination justify-content-center">
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="previous()">Previous</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="goto()" id="nowpage">1/1</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="next()">Next</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#" onclick="play()" id="play">Play</a>
+                                            </li>
+                                        </ul>
+                                        
+                                    </nav>
+                                    <button type="button" class="btn btn-outline-secondary" id="3dstart" style="margin-left: 10px;">2D</button>
+
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                     <div id="new_plot" style="text-align: center"></div>
                 </div>
-                <div class="d-flex justify-content-center">
-                    <nav aria-label="Page navigation example">
-                        <ul class="pagination" id="img-select">
-                            <nav aria-label="Page navigation example">
-                                <ul class="pagination justify-content-center">
-                                    <li class="page-item">
-                                        <a class="page-link" href="#"  onclick="previous()">Previous</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" id="nowpage">1/1</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#" onclick="next()">Next</a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </ul>
-                    </nav>
+                <div class="d-flex justify-content-center mypage">
+                    
                 </div>
-            </div>
-            <div class="col-3">
-                <div class="dropdown">
-
-                </div>
-
-                <form id="control" class="controlbox">
-                    <div id="2d_control">
-                        <h6>Preference</h6>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="mesh" checked>
-                            <label class="form-check-label" for="mesh">mesh</label>
-                        </div>
-                        <div class="form-group form-check subcheck">
-                            <input type="checkbox" class="form-check-input" id="tri_index">
-                            <label class="form-check-label" for="tri_index">index of triangles</label>
-                        </div>
-                        <div class="form-group form-check subcheck">
-                            <input type="checkbox" class="form-check-input" id="ver_index">
-                            <label class="form-check-label" for="ver_index">index of vertices</label>
-                        </div>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="edg_label">
-                            <label class="form-check-label" for="edg_label">label of edges</label>
-                        </div>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="level" checked>
-                            <label class="form-check-label" for="level">isoline</label>
-                        </div>
-                        <div class="form-group form-check subcheck">
-                            <input type="checkbox" class="form-check-input" id="colorbar" checked>
-                            <label class="form-check-label" for="colorbar">colorbar</label>
-                        </div>
-                        <h6>Download</h6>
-                        <div class="btn-group" role="group" aria-label="Basic example" id="2d_download_btn">
-                            <a href="#" class="btn btn-outline-primary" id="2dsvg">SVG</a>
-                            <a href="#" class="btn btn-outline-primary 2d_output" id="2dpng">PNG</a>
-                        </div>
-                    </div>
-                    <div id="3d_control" style="display: none;">
-                        <h6>Preference</h6>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="mesh3d" checked>
-                            <label class="form-check-label" for="mesh3d">mesh</label>
-                        </div>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="wireframe">
-                            <label class="form-check-label" for="wireframe">wireframe</label>
-                        </div>
-                        <h6>Set View</h6>
-                        <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="axes3d">
-                            <label class="form-check-label" for="axes3d">axes</label>
-                        </div>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="view(0,0,frustumSize)">XY</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="view(frustumSize,0,0)">YZ</button>
-                            <button type="button" class="btn btn-outline-secondary"
-                                onclick="view(0,frustumSize,0)">XZ</button>
-                        </div>
-                        <br>
-                        <br>
-                        <h6>Download</h6>
-                        <div class="btn-group" role="group" id="3d_download_btn">
-                            <a href="#" class="btn btn-outline-primary" id="3dpng">PNG</a>
-                        </div>
-                    </div>
-                </form>
-
-            </div>
+            </main>
+            
         </div>
         <canvas id="temp_canvas"></canvas>
-    </main>
+    </div>
 
 </body>
 <script>
@@ -141,6 +157,7 @@
     var edge_data;
     var minmax_data;
     var basic_data;
+    var pause = 1;
 
     var cprofile1 = ["#0000ff", "#00ffff", "#00ff00", "#ffff00", "#ff0000"];
     var cprofile2 = ["#112F41", "#0894A1", "#47AB6C", "#F2B134", "#ED553B"];
@@ -150,11 +167,25 @@
     var now_file = 1;
     var total_file = 0;
 
+    function play() {
+        if (pause) {
+            pause = 0;
+            $("#play").text('Pause');
+        }else{
+            pause = 1;
+            $("#play").text('Play');
+        }
+    }
+
     function reload() {
         // basic_ajax();
         $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
-            mydraw2d();
-            mydraw3d();
+            if ($("#3dstart").text() == '2D') {
+                mydraw2d();
+            } else {
+                mydraw3d();
+            }
+            $("#nowpage").text(now_file + '/' + total_file);
         })
     }
     function mesh_ajax() {
@@ -162,7 +193,7 @@
             url: './cache/mesh' + now_file + '.json',
             type: 'GET'
         }).done((m) => {
-            console.log(m);
+            // console.log(m);
             mesh_data = m.mesh;
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
@@ -175,7 +206,7 @@
             url: './cache/vertex' + now_file + '.json',
             type: 'GET'
         }).done((m) => {
-            console.log(m);
+            // console.log(m);
             vertex_data = m.position;
             minmax_data = m.minmax;
         }).fail((xhr, status, error) => {
@@ -189,7 +220,7 @@
             url: './cache/edge' + now_file + '.json',
             type: 'GET'
         }).done((m) => {
-            console.log(m);
+            // console.log(m);
             edge_data = m.edge;
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
@@ -202,7 +233,7 @@
             url: './cache/basic' + now_file + '.json',
             type: 'GET'
         }).done((m) => {
-            console.log(m);
+            // console.log(m);
             basic_data = m;
             $("#new_plot").children("canvas").remove();
             init();
@@ -221,9 +252,9 @@
         return $.ajax({
             url: './total_temp',
             type: 'GET'
-        }).done((m)=>{
+        }).done((m) => {
             total_file = m.total;
-            $("#nowpage").text(now_file+'/'+total_file);
+            $("#nowpage").text(now_file + '/' + total_file);
 
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
@@ -234,10 +265,10 @@
     function setnowpage(page) {
         if (now_file != page) {
             now_file = page;
-            basic_ajax();
-            $("#nowpage").text(now_file+'/'+total_file);
+            // basic_ajax();
             now_file = page;
             reload();
+
         }
     }
 
@@ -256,6 +287,12 @@
         }
         setnowpage(temp_now_file);
     }
+
+    function goto() {
+        var page= Number(prompt('Go to figure', now_file));
+        setnowpage(page);
+    }
+
     $(document).ready(function () {
         basic_ajax();
         get_picnum_ajax();
@@ -297,6 +334,25 @@
 
         });
 
+        $("#mytoggle").click(function () {
+            if ($("#control").is(":visible")) {
+                if ($(".sidebar").hasClass('d-none')) {
+                    $(".sidebar").removeClass('d-md-block')
+                    $(".dashboard").removeClass("col-md-10").addClass("col-md-12")
+                } else{
+                    $(".sidebar").addClass('d-none')
+                }
+                
+            }else{
+                if (!$(".sidebar").hasClass('d-md-block')) {
+                    $(".sidebar").addClass('d-md-block')
+                    $(".dashboard").removeClass("col-md-12").addClass("col-md-10")
+                }
+                if ($(".sidebar").hasClass('d-none')) {
+                    $(".sidebar").removeClass('d-none')
+                }   
+            }
+        })
     });
 
 </script>

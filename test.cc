@@ -149,7 +149,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     mesh_name << BASE_DIR << "/cache/mesh" << plotcount << ".json";
     std::ofstream mesh_json(mesh_name.str());
     mesh_json << "{ \"mesh\" :" << endl;
-    mesh_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
+    mesh_json << std::setiosflags(std::ios::scientific) << std::setprecision(8) << "  [" << endl;
     for (int it = 0; it < Th.nt; it++)
     {
         for (int iv = 0; iv < 3; iv++)
@@ -212,7 +212,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     vertex_name << BASE_DIR << "/cache/vertex" << plotcount << ".json";
     std::ofstream vertex_json(vertex_name.str());
 
-    vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
+    vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(8);
     vertex_json << "{" << endl;
     vertex_json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
     vertex_json << "             {\"id\":" << Mi << ",\"u\":" << myfmax << "}]," << endl;
@@ -235,7 +235,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     edge_name << BASE_DIR << "/cache/edge" << plotcount << ".json";
     std::ofstream edge_json(edge_name.str());
     edge_json << "{ \"edge\" :" << endl;
-    edge_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
+    edge_json << std::setiosflags(std::ios::scientific) << std::setprecision(8) << "  [" << endl;
     for (int i = 0; i < Th.neb; i++)
     {
         const int &v0 = Th(Th.bedges[i][0]);
@@ -261,7 +261,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
         basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json";
         std::ofstream basic_json(basic_name.str());
 
-        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
+        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(8);
         basic_json << "{" << endl;
         basic_json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl;
         basic_json << "           [" << x1 << "," << y1 << "]]" << endl;

@@ -5,13 +5,15 @@ form {
     padding-top: 10px;
 }
 .dashboard{ 
-    margin: 20px;
-    padding: 25px 25px;
-    background-color: rgba(215, 215, 215, 0.8) !important;
+    /* margin: 20px; */
+    margin-top: 30px;
+    /* background-color: rgba(215, 215, 215, 0.8) !important; */
 }
 .controlbox{
     padding-top: 25px;
-    font-size: 15pt;
+    padding-left: 25px;
+    padding-right: 25px;
+    /* font-size: 13pt; */
 }
 .subcheck{
     margin-left: 2em;
@@ -22,11 +24,15 @@ form {
     padding-bottom: 5px;
 }
 #new_plot > svg {
-    width: 75% !important;
+    width: 90% !important;
     height: auto !important;
 }
 
 #new_plot > canvas {
-    width: 75% !important;
+    width: 90% !important;
     height: auto !important;
+}
+
+.mypage{
+    padding-top: 10px;
 }
