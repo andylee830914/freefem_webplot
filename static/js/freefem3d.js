@@ -37,6 +37,7 @@ function init() {
     renderer.setPixelRatio(1);
     renderer.setSize(sc, sc);
     renderer.setClearAlpha(0);
+    renderer.domElement.id = 'canvas_3d';
 
     theatre.appendChild(renderer.domElement);
 
@@ -180,8 +181,14 @@ function mydraw3d() {
 function animate() {
     if (!pause) {
         next();
+        if (now_file >= total_file) {
+            play();
+        }
     }
-    requestAnimationFrame(animate);
+    setTimeout(function () {
+        requestAnimationFrame(animate);
+    }, 100);
+
     renderer.render(scene, camera);
 }
 

@@ -44,7 +44,7 @@
                         <div id="2d_control">
                             <h6>Preference</h6>
                             <div class="form-group form-check">
-                                <input type="checkbox" class="form-check-input" id="mesh" checked>
+                                <input type="checkbox" class="form-check-input" id="mesh">
                                 <label class="form-check-label" for="mesh">mesh</label>
                             </div>
                             <div class="form-group form-check subcheck">
@@ -64,8 +64,12 @@
                                 <label class="form-check-label" for="level">isoline</label>
                             </div>
                             <div class="form-group form-check subcheck">
-                                <input type="checkbox" class="form-check-input" id="colorbar" checked>
+                                <input type="checkbox" class="form-check-input" id="colorbar" >
                                 <label class="form-check-label" for="colorbar">colorbar</label>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="svg">
+                                <label class="form-check-label" for="svg">Preview in SVG</label>
                             </div>
                             <h6>Download</h6>
                             <div class="btn-group" role="group" aria-label="Basic example" id="2d_download_btn">
@@ -76,7 +80,7 @@
                         <div id="3d_control" style="display: none;">
                             <h6>Preference</h6>
                             <div class="form-group form-check">
-                                <input type="checkbox" class="form-check-input" id="mesh3d" checked>
+                                <input type="checkbox" class="form-check-input" id="mesh3d">
                                 <label class="form-check-label" for="mesh3d">mesh</label>
                             </div>
                             <div class="form-group form-check">
@@ -235,12 +239,12 @@
         }).done((m) => {
             // console.log(m);
             basic_data = m;
-            $("#new_plot").children("canvas").remove();
+            $("#canvas_3d").remove();
             init();
             animate();
             reload();
             if ($('#3dstart').text() == '2D') {
-                $("#new_plot").children("canvas").hide();
+                $("#canvas_3d").hide();
             }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
@@ -301,7 +305,7 @@
         //update draw
         $("#control").find('input[type="checkbox"]').change(function () {
             if ($("#3dstart").text() == '2D') {
-                mydraw2d();
+                mydraw2d()
             } else {
                 mydraw3d();
             }
@@ -310,10 +314,10 @@
 
         //3d switch
         $('#3dstart').click(function () {
-            if ($("#new_plot").children("svg").is(":hidden")) {
+            if ($("#3dstart").text() == '3D') {
                 //2D mode
                 $(this).text('2D');
-                $("#new_plot").children("canvas").hide();
+                $("#canvas_3d").hide();
                 $("#new_plot").children("svg").show();
                 $('#2d_control').show();
                 $('#3d_control').hide();
@@ -324,13 +328,16 @@
                 //3D mode
                 $(this).text('3D');
                 $("#new_plot").children('svg').hide();
-                $("#new_plot").children("canvas").show();
+                $("#canvas_2d").hide();
+                $("#canvas_3d").show();
                 $('#2d_control').hide();
                 $('#3d_control').show();
                 // mydraw3d();
                 // enable camera orbit control
                 controls.enabled = true;
             }
+            reload();
+
 
         });
 
