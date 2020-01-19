@@ -18,6 +18,7 @@ Server svr;
 
 namespace{
     const char DEFAULT_FETYPE[] = "P1";
+    const char DEFAULT_CMM[] = "";
     const char BASE_DIR[] =  "./static";
     int plotcount = 0;
 }
@@ -80,7 +81,7 @@ class WEBPLOT_Op : public E_F0mps
 {
   public:
     Expression eTh, ef;
-    static const int n_name_param = 1;
+    static const int n_name_param = 2;
     static basicAC_F0::name_and_type name_param[];
     Expression nargs[n_name_param];
 
@@ -108,13 +109,15 @@ class WEBPLOT_Op : public E_F0mps
 basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
     {
         // modify static const int n_name_param = ... in the above member
+        {"cmm", &typeid(string *)},
         {"fetype", &typeid(string *)}
         //{  "logscale",  &typeid(bool)} // not implemented
 };
 
 AnyType WEBPLOT_Op::operator()(Stack stack) const
 {
-    const std::string fetype = get_string(stack, nargs[0], DEFAULT_FETYPE);
+    const std::string cmm = get_string(stack, nargs[0], DEFAULT_CMM);
+    const std::string fetype = get_string(stack, nargs[1], DEFAULT_FETYPE);
     plotcount = plotcount+1;
     const Mesh *const pTh = GetAny<const Mesh *const>((*eTh)(stack));
     ffassert(pTh);
@@ -214,6 +217,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
 
     vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(8);
     vertex_json << "{" << endl;
+    vertex_json << "  \"cmm\" : \"" << cmm << "\"," << endl;
     vertex_json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
     vertex_json << "             {\"id\":" << Mi << ",\"u\":" << myfmax << "}]," << endl;
 

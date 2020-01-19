@@ -117,8 +117,9 @@
             <main role="main" class="col-md-10 ml-sm-auto px-4 dashboard">
                 <div id="dashboard_new" class="">
                     <div class="row plot_title">
-                        <div class="d-flex flex-fill align-items-center">
+                        <div class="d-flex flex-column flex-fill align-items-left">
                             <h6>Output</h6>
+                            <h6 class="text-muted" id="comment"></h6>
                         </div>
                         <div class="d-flex justify-content-end align-items-center">
                             <nav aria-label="Page navigation example">
@@ -164,6 +165,7 @@
     var edge_data;
     var minmax_data;
     var basic_data;
+    var cmm_data;
     var pause = 1;
     var preview = 1;
 
@@ -217,6 +219,10 @@
             // console.log(m);
             vertex_data = m.position;
             minmax_data = m.minmax;
+            cmm_data = m.cmm;
+            if (cmm_data) {
+                $("#comment").text(cmm_data);
+            }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
