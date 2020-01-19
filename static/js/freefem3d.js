@@ -55,8 +55,6 @@ function mydraw3d() {
         zc = sc;
     }
 
-    console.log(zc);
-
     var geometry = new THREE.BufferGeometry();
     var vertices = [];
     var normals = [];

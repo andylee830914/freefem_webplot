@@ -2,39 +2,29 @@ var draw = SVG().addTo('#new_plot');
 
 //output btn for 2d SVG
 $('#2dsvg').click(function (e) {
+    preview = 0;
+    mydraw2d();
     var text = draw.svg();
     var file = new Blob([text], { type: 'image/svg+xml' });
     var url = URL.createObjectURL(file);
     // var w = window.open(url, 'test.svg');
     this.download = 'output-' + now_file +'.svg';
     this.href = url;
+    preview = 1;
 });
 
 //output btn for 2D PNG
 $('#2dpng').click(function () {
-    var text = draw.svg();
-    var file = new Blob([text], { type: 'image/svg+xml' });
-    var canvas = document.getElementById('temp_canvas');
-    var box = draw.viewbox();
-    // var object  = this;
-    // this.download = 'test.png';
-
+    preview = 0;
+    mydraw2d_canvas();
     var w1 = window.open("", 'test.png'); // to prevent browser block popup window
-    $(canvas).attr('width', 1024 * box.width / box.height).attr('height', '1024');
-    var ctx = canvas.getContext('2d');
-    var img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = function () {
-        ctx.drawImage(img, 0, 0, 1024 * box.width / box.height, 1024);
-        var imgURI = canvas.toDataURL('image/png')
-        var blob = dataURItoBlob(imgURI)
-        var url = URL.createObjectURL(blob);
-        w1.location.href = url;
-        // console.log(object);
-        // object.href = url;
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        $(canvas).attr('width', '0').attr('height', '0');
-    };
+    var canvas = document.getElementById("canvas_2d");
+    var imgURI = canvas.toDataURL('image/png')
+    var blob = dataURItoBlob(imgURI)
+    var url = URL.createObjectURL(blob);
+    w1.location.href = url;
+    preview = 1;
+
 });
 
 // 2D Draw
@@ -72,15 +62,17 @@ function mydraw2d() {
         height: (1.1 * max_y) * sc
     })
 
-    if (!$("#svg").is(':checked')) {
-        $("#new_plot").children('svg').hide();
-        $("#canvas_2d").show();
-        mydraw2d_canvas();
-        return;
-    } else {
-        $("#new_plot").children("svg").show();
-        $("#canvas_2d").hide();
+    if (preview == 1) {
+        if (!$("#svg").is(':checked')) {
+            $("#new_plot").children('svg').hide();
+            $("#canvas_2d").show();
+            mydraw2d_canvas();
+            return;
+        } else {
+            $("#new_plot").children("svg").show();
+            $("#canvas_2d").hide();
 
+        }
     }
 
     var gradient = draw.gradient('linear', function (add) {
@@ -159,10 +151,10 @@ function mydraw2d() {
         }
 
 
-        nlevel = 20;
-        vlevel = [];
-        eps = 1e-10;
-        dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
+        var nlevel = Number($("#nbiso").val());
+        var vlevel = [];
+        var eps = 1e-10;
+        var dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
 
 
         for (let i = 0; i <= nlevel; i++) {
@@ -180,9 +172,9 @@ function mydraw2d() {
 
         for (let vi = 0; vi < vlevel.length; vi++) {
             const ve = vlevel[vi];
-            text_space = max_y / nlevel;
-            cr = 4 * vi / nlevel;
-            ci = Math.floor(cr);
+            var text_space = max_y / nlevel;
+            var cr = 4 * vi / nlevel;
+            var ci = Math.floor(cr);
             if (ci == 4) {
                 ci = ci - 1;
             }
@@ -197,26 +189,26 @@ function mydraw2d() {
 
             for (let i = 0; i < mesh_data.length; i++) {
                 const e = mesh_data[i];
-                level_line = [];
+                var level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
-                    rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
+                    var rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
                     level_line.push([(rate * e[1].x + (1 - rate) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h ])
                 }
                 if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
                     //at 2nd edge of the element
-                    rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
+                    var rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
                     level_line.push([(rate * e[2].x + (1 - rate) * e[1].x) * w, (rate * e[2].y + (1 - rate) * e[1].y) * h ])
                 }
                 if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
                     //at 3rd edge of the element
-                    rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
+                    var rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
                     level_line.push([(rate * e[0].x + (1 - rate) * e[2].x) * w, (rate * e[0].y + (1 - rate) * e[2].y) * h ])
                 }
                 if (level_line.length > 2) {
                     if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                         //at 1st edge of the element
-                        rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
+                        var rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
                         level_line.push([(rate * e[1].x + (1 - rate) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h])
                     }
                 }
@@ -245,8 +237,15 @@ function mydraw2d_canvas() {
         var canvas = document.createElement('canvas');
         canvas.id = "canvas_2d";
         // canvas.style.border = "1px solid";
+        if (preview == 0) {
+            if ($("#svg").is(':checked')) {
+                canvas.style.display="none";
+            }
+        }
         var body = document.getElementById("new_plot");
         body.appendChild(canvas);
+        
+
     }
     var box = draw.viewbox();
     $("#canvas_2d").attr('width', 1024 * box.width / box.height).attr('height', '1024');
@@ -350,10 +349,10 @@ function mydraw2d_canvas() {
         }
 
 
-        nlevel = 20;
-        vlevel = [];
-        eps = 1e-10;
-        dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
+        var nlevel = Number($("#nbiso").val());
+        var vlevel = [];
+        var eps = 1e-10;
+        var dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
 
         for (let i = 0; i <= nlevel; i++) {
             vlevel.push(minmax_data[0].u + i * dl);
@@ -369,9 +368,9 @@ function mydraw2d_canvas() {
 
         for (let vi = 0; vi < vlevel.length; vi++) {
             const ve = vlevel[vi];
-            text_space = max_y / nlevel;
-            cr = 4 * vi / nlevel;
-            ci = Math.floor(cr);
+            var text_space = max_y / nlevel;
+            var cr = 4 * vi / nlevel;
+            var ci = Math.floor(cr);
             if (ci == 4) {
                 ci = ci - 1;
             }
@@ -384,20 +383,20 @@ function mydraw2d_canvas() {
 
             for (let i = 0; i < mesh_data.length; i++) {
                 const e = mesh_data[i];
-                level_line = [];
+                var level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
-                    rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
+                    var rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
                     level_line.push([(rate * (e[1].x - c.x) + (1 - rate) * (e[0].x - c.x)) * w, (rate * (e[1].y + c.y) + (1 - rate) * (e[0].y + c.y)) * h])
                 }
                 if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
                     //at 2nd edge of the element
-                    rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
+                    var rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
                     level_line.push([(rate * (e[2].x - c.x) + (1 - rate) * (e[1].x - c.x)) * w, (rate * (e[2].y + c.y) + (1 - rate) * (e[1].y + c.y)) * h])
                 }
                 if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
                     //at 3rd edge of the element
-                    rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
+                    var rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
                     level_line.push([(rate * (e[0].x - c.x) + (1 - rate) * (e[2].x - c.x)) * w, (rate * (e[0].y + c.y) + (1 - rate) * (e[2].y + c.y)) * h])
                 }
                 ctx.beginPath();

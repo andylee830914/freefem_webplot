@@ -40,7 +40,7 @@
 
                     </div>
 
-                    <form id="control" class="controlbox nav flex-column">
+                    <form id="control" class="controlbox nav flex-column" onsubmit="event.preventDefault()">
                         <div id="2d_control">
                             <h6>Preference</h6>
                             <div class="form-group form-check">
@@ -62,6 +62,10 @@
                             <div class="form-group form-check">
                                 <input type="checkbox" class="form-check-input" id="level" checked>
                                 <label class="form-check-label" for="level">isoline</label>
+                            </div>
+                            <div class="form-group form-check">
+                                <label for="nbiso">Number of isovalues</label>
+                                <input type="number" class="form-control" id="nbiso" value="20">
                             </div>
                             <div class="form-group form-check subcheck">
                                 <input type="checkbox" class="form-check-input" id="colorbar" checked>
@@ -162,6 +166,7 @@
     var minmax_data;
     var basic_data;
     var pause = 1;
+    var preview = 1;
 
     var cprofile1 = ["#0000ff", "#00ffff", "#00ff00", "#ffff00", "#ff0000"];
     var cprofile2 = ["#112F41", "#0894A1", "#47AB6C", "#F2B134", "#ED553B"];
@@ -303,7 +308,7 @@
 
 
         //update draw
-        $("#control").find('input[type="checkbox"]').change(function () {
+        $("#control").find('input').change(function () {
             if ($("#3dstart").text() == '2D') {
                 mydraw2d()
             } else {
