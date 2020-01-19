@@ -67,7 +67,7 @@ function mydraw2d() {
 
     draw.viewbox({
         x: (-0.05 * max_x + basic_data.bounds[0][0]) * sc
-        , y: (-0.05 * max_y + basic_data.bounds[0][1]) * sc
+        , y: (-0.05 * max_y - basic_data.bounds[1][1]) * sc
         , width: (1.1 * max_x + draw_viewbox_w_scale) * sc,
         height: (1.1 * max_y) * sc
     })
@@ -127,7 +127,6 @@ function mydraw2d() {
 
         }
     } else {
-        console.log(edge_data);
         edge_data.forEach((e, i) => {
             var line = draw.line(e.vertices[0].x * w, e.vertices[0].y * h , e.vertices[1].x * w, e.vertices[1].y * h )
                 .stroke({ color: '#000000',width: 1 / 500 * sc });
@@ -154,9 +153,9 @@ function mydraw2d() {
     if ($("#level").is(':checked') && typeof mesh_data !== 'undefined') {
         if (draw_colorbox) {
             var rect = draw.rect(max_y * sc, 0.02 * max_y * sc).fill(gradient)
-                .attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w)
-                .attr('y', (basic_data.bounds[1][1] - basic_data.bounds[0][1]-0.02*max_y) * sc)
-                .rotate(270, (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w, (basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc)
+                .attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale - 1.15 * max_y) * w)
+                .attr('y', (0.02 * max_y+basic_data.bounds[1][1]) * h)
+                .rotate(270, (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.13 * max_y) * w, (0.02 * max_y+basic_data.bounds[1][1]) * h)
         }
 
 
@@ -164,11 +163,8 @@ function mydraw2d() {
         vlevel = [];
         eps = 1e-10;
         dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
-        if (dl == 0) {
-            
-            return;
-        }
-        // vlevel.push(minmax_data[0].u);
+
+
         for (let i = 0; i <= nlevel; i++) {
             vlevel.push(minmax_data[0].u + i * dl);
         }
@@ -204,18 +200,25 @@ function mydraw2d() {
                 level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
-                    rate = (ve - e[0].u) / (e[1].u - e[0].u)
+                    rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
                     level_line.push([(rate * e[1].x + (1 - rate) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h ])
                 }
                 if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
                     //at 2nd edge of the element
-                    rate = (ve - e[1].u) / (e[2].u - e[1].u)
+                    rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
                     level_line.push([(rate * e[2].x + (1 - rate) * e[1].x) * w, (rate * e[2].y + (1 - rate) * e[1].y) * h ])
                 }
                 if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
                     //at 3rd edge of the element
-                    rate = (ve - e[2].u) / (e[0].u - e[2].u)
+                    rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
                     level_line.push([(rate * e[0].x + (1 - rate) * e[2].x) * w, (rate * e[0].y + (1 - rate) * e[2].y) * h ])
+                }
+                if (level_line.length > 2) {
+                    if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
+                        //at 1st edge of the element
+                        rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
+                        level_line.push([(rate * e[1].x + (1 - rate) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h])
+                    }
                 }
 
                 draw.polyline(level_line).fill('none').stroke({ width: 1 / 250 * sc, color: color[ci].at(cr - ci).toHex() });
@@ -234,8 +237,8 @@ function mydraw2d_canvas() {
     // var max = Math.max(max_x, max_y);
     var max = max_y;
     var c = {
-        x: -0.05 * max_x +basic_data.bounds[0][0],
-        y: -0.05 * max_y +basic_data.bounds[0][1]
+        x: -0.05 * max_x + basic_data.bounds[0][0],
+        y: -0.05 * max_y - basic_data.bounds[1][1],
     }
     
     if($("#canvas_2d").length == 0){
@@ -244,8 +247,6 @@ function mydraw2d_canvas() {
         // canvas.style.border = "1px solid";
         var body = document.getElementById("new_plot");
         body.appendChild(canvas);
-        
-        // $("#canvas_2d").width("100%").height("100%");
     }
     var box = draw.viewbox();
     $("#canvas_2d").attr('width', 1024 * box.width / box.height).attr('height', '1024');
@@ -268,17 +269,17 @@ function mydraw2d_canvas() {
     if ($("#mesh").is(':checked')) {
         mesh_data.forEach((e, i) => {
             ctx.beginPath();
-            ctx.moveTo((e[0].x- c.x) * w , (e[0].y + c.y) * h);
-            ctx.lineTo((e[1].x- c.x) * w , (e[1].y + c.y) * h);
-            ctx.lineTo((e[2].x- c.x) * w , (e[2].y + c.y) * h);
-            ctx.lineTo((e[0].x- c.x) * w , (e[0].y + c.y) * h);
+            ctx.moveTo((e[0].x - c.x) * w, (e[0].y + c.y) * h);
+            ctx.lineTo((e[1].x - c.x) * w, (e[1].y + c.y) * h);
+            ctx.lineTo((e[2].x - c.x) * w, (e[2].y + c.y) * h);
+            ctx.lineTo((e[0].x - c.x) * w, (e[0].y + c.y) * h);
             ctx.strokeStyle = "#000000";
             ctx.lineWidth = 1 / 500 * sc;
             ctx.closePath();
 
             
             if ($("#tri_index").is(':checked')) {
-                ctx.font = 0.02 * sc + "px";
+                ctx.font = 0.02 * sc + "px  sans-serif";
                 ctx.textAlign = "center";
                 ctx.fillText(i, (e[0].x + e[1].x + e[2].x - 3 * c.x) / 3 * w, (e[0].y + e[1].y + e[2].y + 3 * c.y) / 3 * h);
             }
@@ -289,10 +290,12 @@ function mydraw2d_canvas() {
         if ($("#ver_index").is(':checked') && typeof vertex_data !== 'undefined') {
             vertex_data.forEach((e, i) => {
                 ctx.beginPath();
-                ctx.arc((e.x - c.x) * w, (e.y - c.y) * h, 1 / 100 * sc, 0, Math.PI * 2, true); 
-                ctx.font = 0.02 * sc + "px";
+                ctx.arc((e.x - c.x) * w, (e.y + c.y) * h, 1 / 250 * sc , 0, Math.PI * 2); 
+                ctx.fillStyle = '#000000'
+                ctx.fill();
+                ctx.font = 0.02 * sc + "px  sans-serif";
                 ctx.textAlign = "center";
-                ctx.fillStyle = '#0000FF'
+                ctx.fillStyle = '#0000FF';
                 ctx.fillText(i, (e.x - 0.015 - c.x) * w, (e.y + 0.01 + c.y) * h);
                 ctx.stroke();
 
@@ -320,7 +323,7 @@ function mydraw2d_canvas() {
             ctx.strokeStyle = "#f06";
             ctx.lineWidth = 1 / 500 * sc;
             ctx.closePath();
-            ctx.font = 0.02 * sc + "px";
+            ctx.font = 0.02 * sc + "px  sans-serif";
             ctx.textAlign = "center";
             ctx.fillStyle = '#f06'
             ctx.fillText(e.label, (e.vertices[0].x + e.vertices[1].x - 2 * c.x) / 2 * w - 0.015 * sc, (e.vertices[0].y + e.vertices[1].y +2*c.y) / 2 * h);
@@ -331,23 +334,27 @@ function mydraw2d_canvas() {
     }
 
     if ($("#level").is(':checked') && typeof mesh_data !== 'undefined') {
-        // if (draw_colorbox) {
-        //     var rect = draw.rect(max_y * sc, 0.02 * max_y * sc).fill(gradient)
-        //         .attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w)
-        //         .attr('y', (basic_data.bounds[1][1] - basic_data.bounds[0][1] - 0.02 * max_y) * sc)
-        //         .rotate(270, (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.11 * max_y) * w, (basic_data.bounds[1][1] - basic_data.bounds[0][1]) * sc)
-        // }
+        if (draw_colorbox) {
+
+            // Create gradient
+            var grd = ctx.createLinearGradient(0, max_y * sc, 0, -0.05 * max_y * h);
+            grd.addColorStop(0, cprofile[0]);
+            grd.addColorStop(0.25, cprofile[1]);
+            grd.addColorStop(0.50, cprofile[2]);
+            grd.addColorStop(0.75, cprofile[3]);
+            grd.addColorStop(1, cprofile[4]);
+
+            // Fill with gradient
+            ctx.fillStyle = grd;
+            ctx.fillRect((basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.13 * max_y - c.x) * w, -0.05 * max_y * h, 0.02 * max_y * sc, max_y * sc);
+        }
 
 
         nlevel = 20;
         vlevel = [];
         eps = 1e-10;
         dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
-        if (dl == 0) {
 
-            return;
-        }
-        // vlevel.push(minmax_data[0].u);
         for (let i = 0; i <= nlevel; i++) {
             vlevel.push(minmax_data[0].u + i * dl);
         }
@@ -360,7 +367,6 @@ function mydraw2d_canvas() {
             vlevel[nlevel] = vlevel[nlevel] - eps;
         }
 
-
         for (let vi = 0; vi < vlevel.length; vi++) {
             const ve = vlevel[vi];
             text_space = max_y / nlevel;
@@ -369,37 +375,41 @@ function mydraw2d_canvas() {
             if (ci == 4) {
                 ci = ci - 1;
             }
-            // if ((vi == 0 || vi == vlevel.length - 1 || vi % 2 == 0) && draw_colorbox) {
-            //     var text = draw.plain(vlevel[vi].toExponential(3)).attr('x', (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.03 * max_y) * w).attr('y', (basic_data.bounds[1][1] - text_space * (vlevel.length - vi - 1)) * h)
-            //         .font({
-            //             size: 0.03 * sc + "px",
-            //             anchor: 'middle',
-            //             fill: color[ci].at(cr - ci).toHex()
-            //         });
-            // }
+            if ((vi == 0 || vi == vlevel.length - 1 || vi % 2 == 0) && draw_colorbox) {
+                ctx.font = 0.03 * sc + "px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillStyle = color[ci].at(cr - ci).toHex()
+                ctx.fillText(vlevel[vi].toExponential(3), (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.03 * max_y-c.x) * w, (basic_data.bounds[1][1] - text_space * (vlevel.length - vi-1)+c.y) * h);
+            }
 
             for (let i = 0; i < mesh_data.length; i++) {
                 const e = mesh_data[i];
                 level_line = [];
                 if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
                     //at 1st edge of the element
-                    rate = (ve - e[0].u) / (e[1].u - e[0].u)
+                    rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
                     level_line.push([(rate * (e[1].x - c.x) + (1 - rate) * (e[0].x - c.x)) * w, (rate * (e[1].y + c.y) + (1 - rate) * (e[0].y + c.y)) * h])
                 }
                 if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
                     //at 2nd edge of the element
-                    rate = (ve - e[1].u) / (e[2].u - e[1].u)
+                    rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
                     level_line.push([(rate * (e[2].x - c.x) + (1 - rate) * (e[1].x - c.x)) * w, (rate * (e[2].y + c.y) + (1 - rate) * (e[1].y + c.y)) * h])
                 }
                 if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
                     //at 3rd edge of the element
-                    rate = (ve - e[2].u) / (e[0].u - e[2].u)
+                    rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
                     level_line.push([(rate * (e[0].x - c.x) + (1 - rate) * (e[2].x - c.x)) * w, (rate * (e[0].y + c.y) + (1 - rate) * (e[2].y + c.y)) * h])
                 }
                 ctx.beginPath();
-                if (level_line.length == 2) {
-                    ctx.moveTo(level_line[0][0], level_line[0][1]);
-                    ctx.lineTo(level_line[1][0], level_line[1][1]);
+                level_line.forEach((e,i) => {
+                    if (i==0) {
+                        ctx.moveTo(level_line[i][0], level_line[i][1]);
+                    }else{
+                        ctx.lineTo(level_line[i][0], level_line[i][1]);
+                    }
+                }); 
+                if (level_line.length > 2) {
+                    ctx.lineTo(level_line[0][0], level_line[0][1]);
                 }
                 
                 ctx.strokeStyle = color[ci].at(cr - ci).toHex();

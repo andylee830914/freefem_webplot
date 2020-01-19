@@ -50,7 +50,12 @@ function mydraw3d() {
     const sc = 1000;
     const xc = sc;
     const yc = sc;
-    const zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
+    var zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
+    if (!isFinite(zc)) {
+        zc = sc;
+    }
+
+    console.log(zc);
 
     var geometry = new THREE.BufferGeometry();
     var vertices = [];
@@ -113,14 +118,14 @@ function mydraw3d() {
                             varying vec2 vUv;
                             
                             void main() {
-                                if (vUv.y < 0.25){
-                                    gl_FragColor = vec4(mix(color1, color2, 4.0 * vUv.y), 1.0);
-                                }else if (vUv.y >= 0.25 && vUv.y < 0.5){
-                                    gl_FragColor = vec4(mix(color2, color3, 4.0 * vUv.y - 1.0), 1.0);
+                                if (vUv.y >= 0.75){
+                                    gl_FragColor = vec4(mix(color4, color5, 4.0 * vUv.y - 3.0), 1.0);
                                 }else if (vUv.y >= 0.5 && vUv.y < 0.75){
                                     gl_FragColor = vec4(mix(color3, color4, 4.0 * vUv.y - 2.0), 1.0);
+                                }else if (vUv.y >= 0.25 && vUv.y < 0.5){
+                                    gl_FragColor = vec4(mix(color2, color3, 4.0 * vUv.y - 1.0), 1.0);
                                 }else{
-                                    gl_FragColor = vec4(mix(color4, color5, 4.0 * vUv.y - 3.0), 1.0);
+                                    gl_FragColor = vec4(mix(color1, color2, 4.0 * vUv.y), 1.0);
                                 }
                             }
                         `,
@@ -187,7 +192,7 @@ function animate() {
     }
     setTimeout(function () {
         requestAnimationFrame(animate);
-    }, 100);
+    }, 50);
 
     renderer.render(scene, camera);
 }
