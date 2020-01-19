@@ -15,7 +15,10 @@ $('#3dpng').click(function () {
 
 
 function init() {
-    max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+    max_x = basic_data.bounds[1][0] - basic_data.bounds[0][0];
+    max_y = basic_data.bounds[1][1] - basic_data.bounds[0][1];
+    max = Math.max(max_x, max_y);
+    // max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
     c = {
         x: (basic_data.bounds[1][0] + basic_data.bounds[0][0]) / 2,
         y: (basic_data.bounds[1][1] + basic_data.bounds[0][1]) / 2
@@ -23,8 +26,8 @@ function init() {
     const sc = 1000;
     frustumSize = sc + sc / 10;
     var aspect = 1;
-    renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true });
-    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, 2 * sc);
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, frustumSize *max);
     // camera = new THREE.PerspectiveCamera(45, 1, 1, 3*sc);
     camera.position.set(0, 0, frustumSize);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -34,8 +37,8 @@ function init() {
     axes.position.set(-c.x * sc, -c.y * sc, 0); //move center
     
     var theatre = document.getElementById("new_plot")
-    renderer.setPixelRatio(1);
-    renderer.setSize(sc, sc);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(sc, (max_y / max_x)*sc);
     renderer.setClearAlpha(0);
     renderer.domElement.id = 'canvas_3d';
 
@@ -49,7 +52,7 @@ function mydraw3d() {
     scene.remove(axes);
     const sc = 1000;
     const xc = sc;
-    const yc = sc;
+    const yc = sc / (max_y / max_x);
     var zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
     if (!isFinite(zc)) {
         zc = sc;
