@@ -45,6 +45,7 @@ void signalHandler(int signum)
     {
         remove(entry.path());
     }
+    svr.stop();
     exit(signum);
 }
 
