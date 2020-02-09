@@ -4,6 +4,7 @@
 #include <sstream>
 #include <csignal>
 #include <filesystem>
+#include <zlib.h>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
@@ -52,6 +53,16 @@ void signalHandler(int signum)
 double myserver()
 {
     svr.set_base_dir(BASE_DIR);
+    // svr.Get(R"(/cache/([a-zA-Z0-9]+)$)", [](const Request &req, Response &res) {
+    //     cout<<"hello"<<endl;
+    // });
+    svr.set_file_request_handler([&](const Request &req, Response &res) {
+        if (req.path.find(".json.gz") != string::npos)
+        {
+            res.set_header("Content-Encoding", "gzip");
+            res.set_header("Content-Type", "application/json");
+        }  
+    });
 
     svr.Get("/", [](const Request &req, Response &res) {
         ifstream ifs("index.html");
@@ -150,10 +161,12 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     }
 
     std::ostringstream mesh_name;
-    mesh_name << BASE_DIR << "/cache/mesh" << plotcount << ".json";
-    std::ofstream mesh_json(mesh_name.str());
+    mesh_name << BASE_DIR << "/cache/mesh" << plotcount << ".json.gz";
+    gzFile gz_mesh_file;
+    gz_mesh_file = gzopen(mesh_name.str().c_str(), "wb");
+    std::stringstream mesh_json;
     mesh_json << "{ \"mesh\" :" << endl;
-    mesh_json << std::setiosflags(std::ios::scientific) << std::setprecision(8) << "  [" << endl;
+    mesh_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
     for (int it = 0; it < Th.nt; it++)
     {
         for (int iv = 0; iv < 3; iv++)
@@ -209,14 +222,19 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     }
     mesh_json << "  ]" << endl;
     mesh_json << "}" << endl;
-    mesh_json.close();
     // cout << myfmin << "," << myfmax << endl;
+    unsigned long int file_mesh_size = sizeof(char) * mesh_json.str().size();
+    // gzwrite(gz_mesh_file, (void *)&file_mesh_size, sizeof(file_mesh_size));
+    gzwrite(gz_mesh_file, (void *)(mesh_json.str().data()), file_mesh_size);
+    gzclose(gz_mesh_file);
 
     std::ostringstream vertex_name;
-    vertex_name << BASE_DIR << "/cache/vertex" << plotcount << ".json";
-    std::ofstream vertex_json(vertex_name.str());
+    vertex_name << BASE_DIR << "/cache/vertex" << plotcount << ".json.gz";
+    gzFile gz_vertex_file;
+    gz_vertex_file = gzopen(vertex_name.str().c_str(), "wb");
+    std::stringstream vertex_json;
 
-    vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(8);
+    vertex_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
     vertex_json << "{" << endl;
     vertex_json << "  \"cmm\" : \"" << cmm << "\"," << endl;
     vertex_json << "  \"minmax\": [{\"id\":" << mi << ",\"u\":" << myfmin << "}," << endl;
@@ -234,13 +252,18 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     }
     vertex_json << "  ]" << endl;
     vertex_json << "}" << endl;
-    vertex_json.close();
+    unsigned long int file_vertex_size = sizeof(char) * vertex_json.str().size();
+    // gzwrite(gz_vertex_file, (void *)&file_vertex_size, sizeof(file_vertex_size));
+    gzwrite(gz_vertex_file, (void *)(vertex_json.str().data()), file_vertex_size);
+    gzclose(gz_vertex_file);
 
     std::ostringstream edge_name;
-    edge_name << BASE_DIR << "/cache/edge" << plotcount << ".json";
-    std::ofstream edge_json(edge_name.str());
+    edge_name << BASE_DIR << "/cache/edge" << plotcount << ".json.gz";
+    gzFile gz_edge_file;
+    gz_edge_file = gzopen(edge_name.str().c_str(), "wb");
+    std::stringstream edge_json;
     edge_json << "{ \"edge\" :" << endl;
-    edge_json << std::setiosflags(std::ios::scientific) << std::setprecision(8) << "  [" << endl;
+    edge_json << std::setiosflags(std::ios::scientific) << std::setprecision(16) << "  [" << endl;
     for (int i = 0; i < Th.neb; i++)
     {
         const int &v0 = Th(Th.bedges[i][0]);
@@ -258,20 +281,28 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     edge_json << "  ]" << endl;
     edge_json << "}" << endl;
 
-    edge_json.close();
+    unsigned long int file_edge_size = sizeof(char) * edge_json.str().size();
+    // gzwrite(gz_edge_file, (void *)&file_edge_size, sizeof(file_edge_size));
+    gzwrite(gz_edge_file, (void *)(edge_json.str().data()), file_edge_size);
+    gzclose(gz_edge_file);
 
     if (plotcount == 1)
     {
         std::ostringstream basic_name;
-        basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json";
-        std::ofstream basic_json(basic_name.str());
+        basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json.gz";
+        gzFile gz_basic_file;
+        gz_basic_file = gzopen(basic_name.str().c_str(), "wb");
+        std::stringstream basic_json;
 
-        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(8);
+        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
         basic_json << "{" << endl;
         basic_json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl;
         basic_json << "           [" << x1 << "," << y1 << "]]" << endl;
         basic_json << "}" << endl;
-        basic_json.close();
+        unsigned long int file_basic_size = sizeof(char) * basic_json.str().size();
+        // gzwrite(gz_basic_file, (void *)&file_basic_size, sizeof(file_basic_size));
+        gzwrite(gz_basic_file, (void *)(basic_json.str().data()), file_basic_size);
+        gzclose(gz_basic_file);
     }
 
 
