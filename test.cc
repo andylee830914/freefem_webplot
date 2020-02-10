@@ -53,15 +53,19 @@ void signalHandler(int signum)
 double myserver()
 {
     svr.set_base_dir(BASE_DIR);
-    // svr.Get(R"(/cache/([a-zA-Z0-9]+)$)", [](const Request &req, Response &res) {
-    //     cout<<"hello"<<endl;
-    // });
+
     svr.set_file_request_handler([&](const Request &req, Response &res) {
         if (req.path.find(".json.gz") != string::npos)
         {
             res.set_header("Content-Encoding", "gzip");
             res.set_header("Content-Type", "application/json");
-        }  
+            res.set_header("Cache-Control", "no-cache");
+        }
+        else
+        {
+            res.set_header("Cache-Control", "public");
+        }
+          
     });
 
     svr.Get("/", [](const Request &req, Response &res) {
