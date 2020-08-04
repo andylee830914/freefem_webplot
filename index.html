@@ -19,7 +19,7 @@
 
     <!-- <script src="js/CSS3DRenderer.js"></script> -->
     <!-- <script async src="mathjax/MathJax.js"></script> -->
-    <title>FreeFem++</title>
+    <title>FreeFem</title>
 </head>
 
 <body>
@@ -28,7 +28,7 @@
             <button class="btn btn-outline-dark btn-sm" type="button" id="mytoggle">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            FreeFem++ 
+            FreeFem 
         </a>
         
     </nav>
@@ -200,7 +200,7 @@
     }
     function mesh_ajax() {
         return $.ajax({
-            url: './cache/mesh' + now_file + '.json',
+            url: './cache/mesh' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -213,7 +213,7 @@
 
     function vertex_ajax() {
         return $.ajax({
-            url: './cache/vertex' + now_file + '.json',
+            url: './cache/vertex' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -231,7 +231,7 @@
 
     function edge_ajax() {
         return $.ajax({
-            url: './cache/edge' + now_file + '.json',
+            url: './cache/edge' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -244,7 +244,7 @@
 
     function basic_ajax() {
         return $.ajax({
-            url: './cache/basic' + now_file + '.json',
+            url: './cache/basic' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);

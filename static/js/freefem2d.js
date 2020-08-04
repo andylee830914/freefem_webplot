@@ -151,7 +151,7 @@ function mydraw2d() {
         }
 
 
-        var nlevel = Number($("#nbiso").val());
+        var nlevel = Number($("#nbiso").val())-1;
         var vlevel = [];
         var eps = 1e-10;
         var dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
