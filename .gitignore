@@ -1,5 +1,5 @@
 myserver.dylib
-test.o
+*.o
 *.edp
 *.msh
 *.ps
