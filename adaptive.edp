@@ -1,4 +1,4 @@
-load "myserver"
+load "webplot"
 include "getARGV.idp"
 // mesh Th=square(2, 2); //the initial mesh
 // webplot(0,Th);
