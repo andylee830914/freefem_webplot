@@ -28,7 +28,7 @@ function init() {
     var aspect = 1;
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, frustumSize *max);
-    // camera = new THREE.PerspectiveCamera(45, 1, 1, 3*sc);
+    // camera = new THREE.PerspectiveCamera(frustumSize * max / 20, 1, 1, frustumSize * max);
     camera.position.set(0, 0, frustumSize);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();

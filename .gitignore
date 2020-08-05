@@ -1,4 +1,4 @@
-myserver.dylib
+webplot.dylib
 *.o
 *.edp
 *.msh
