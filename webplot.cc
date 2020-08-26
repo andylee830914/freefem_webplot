@@ -20,6 +20,8 @@ Server svr;
 namespace{
     const char DEFAULT_FETYPE[] = "P1";
     const char DEFAULT_CMM[] = "";
+    const char DEFAULT_HOST[] = "localhost";
+    const double DEFAULT_PORT = 1234;
     const char BASE_DIR[] =  "./static";
     int plotcount = 0;
 }
@@ -50,8 +52,63 @@ void signalHandler(int signum)
     exit(signum);
 }
 
-double myserver()
+class SERVER_Op : public E_F0
 {
+  public:
+    static const int n_name_param = 2;
+    static basicAC_F0::name_and_type name_param[];
+    Expression nargs[n_name_param];
+
+    // int arg(int i, Stack stack, int defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    double arg(int i, Stack stack, double defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    long arg(int i, Stack stack, long defvalue) const { return nargs[i] ? GetAny<long>((*nargs[i])(stack)) : defvalue; }
+    KN<double> *arg(int i, Stack stack, KN<double> *defvalue) const { return nargs[i] ? GetAny<KN<double> *>((*nargs[i])(stack)) : defvalue; }
+    bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
+
+  public:
+    SERVER_Op(const basicAC_F0 &args)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+
+    AnyType operator()(Stack stack) const;
+};
+
+class WEBPLOT_Op : public E_F0mps
+{
+  public:
+    Expression eTh, ef;
+    static const int n_name_param = 2;
+    static basicAC_F0::name_and_type name_param[];
+    Expression nargs[n_name_param];
+
+    double arg(int i, Stack stack, double defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    long arg(int i, Stack stack, long defvalue) const { return nargs[i] ? GetAny<long>((*nargs[i])(stack)) : defvalue; }
+    KN<double> *arg(int i, Stack stack, KN<double> *defvalue) const { return nargs[i] ? GetAny<KN<double> *>((*nargs[i])(stack)) : defvalue; }
+    bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
+
+  public:
+    WEBPLOT_Op(const basicAC_F0 &args, Expression th)
+    : eTh(th), ef(0)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+
+    WEBPLOT_Op(const basicAC_F0 &args, Expression f, Expression th)
+    : eTh(th), ef(f)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+
+    AnyType operator()(Stack stack) const;
+};
+
+AnyType SERVER_Op::operator()(Stack stack) const
+{
+
+    const std::string host = get_string(stack, nargs[0], DEFAULT_HOST);
+    const int port = static_cast<int>(arg(1,stack,DEFAULT_PORT));
+
     svr.set_base_dir(BASE_DIR);
 
     svr.set_file_request_handler([&](const Request &req, Response &res) {
@@ -84,43 +141,16 @@ double myserver()
     });
 
     cout << endl;
-    cout << "Starting server at http://localhost:1234/" << endl;
+    cout << "Starting server at http://"<< host <<":"<< port <<"/" << endl;
     cout << "Quit the server with CONTROL-C." << endl;
     signal(SIGINT, signalHandler);
-    svr.listen("localhost", 1234);
+    svr.listen(host.c_str(), port);
 
     return 0.0;
 }
 
 
-class WEBPLOT_Op : public E_F0mps
-{
-  public:
-    Expression eTh, ef;
-    static const int n_name_param = 2;
-    static basicAC_F0::name_and_type name_param[];
-    Expression nargs[n_name_param];
 
-    double arg(int i, Stack stack, double defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
-    long arg(int i, Stack stack, long defvalue) const { return nargs[i] ? GetAny<long>((*nargs[i])(stack)) : defvalue; }
-    KN<double> *arg(int i, Stack stack, KN<double> *defvalue) const { return nargs[i] ? GetAny<KN<double> *>((*nargs[i])(stack)) : defvalue; }
-    bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
-
-  public:
-    WEBPLOT_Op(const basicAC_F0 &args, Expression th)
-    : eTh(th), ef(0)
-    {
-        args.SetNameParam(n_name_param, name_param, nargs);
-    }
-
-    WEBPLOT_Op(const basicAC_F0 &args, Expression f, Expression th)
-    : eTh(th), ef(f)
-    {
-        args.SetNameParam(n_name_param, name_param, nargs);
-    }
-
-    AnyType operator()(Stack stack) const;
-};
 
 basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
     {
@@ -129,6 +159,15 @@ basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
         {"fetype", &typeid(string *)}
         //{  "logscale",  &typeid(bool)} // not implemented
 };
+
+basicAC_F0::name_and_type SERVER_Op::name_param[] =
+    {
+        // modify static const int n_name_param = ... in the above member
+        {"host", &typeid(string *)},
+        {"port", &typeid(double)}
+        //{  "logscale",  &typeid(bool)} // not implemented
+};
+
 
 AnyType WEBPLOT_Op::operator()(Stack stack) const
 {
@@ -335,9 +374,26 @@ class WEBPLOT : public OneOperator
     }
 };
 
+class SERVER : public OneOperator
+{
+    const int argc;
+
+  public:
+    SERVER()    : OneOperator(atype<double>()), argc(0) {}
+
+    E_F0 *code(const basicAC_F0 &args) const
+    {
+        if (argc == 0)
+            return new SERVER_Op(args);
+        else
+            ffassert(0);
+    }
+};
+
+
 static void init(){
-    Global.Add("server", "(", new OneOperator0<double>(myserver));
-    Global.Add("webplot", "(", new WEBPLOT);
+    Global.Add("server", "(", new SERVER());
+    Global.Add("webplot", "(", new WEBPLOT());
     Global.Add("webplot", "(", new WEBPLOT(0));
 }
 
