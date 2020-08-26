@@ -11,12 +11,12 @@ fespace Vh(Th,P1);//P1 P1nc
 Vh u,v;
 func f = 1;
 
-solve Poisson(u,v)
+solve Function(u,v)
   = int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))
     - int2d(Th)(f*v) + on(1,u=0);
 
 // plot(u);
-load "myserver"
+load "webplot"
 webplot(Th);
 webplot(u,Th);
 server();
