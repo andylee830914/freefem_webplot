@@ -158,19 +158,22 @@ function mydraw2d() {
 
 
         for (let i = 0; i <= nlevel; i++) {
-            vlevel.push(minmax_data[0].u + i * dl);
+            let tempval = minmax_data[0].u + i * dl;
+            if (Math.abs(tempval) < eps) {
+                tempval = 0;
+            }
+            vlevel.push(tempval);
         }
 
-        if (vlevel[0] > vlevel[1]) {
-            vlevel[0] = vlevel[0] - eps;
-            vlevel[nlevel] = vlevel[nlevel] + eps;
-        } else {
-            vlevel[0] = vlevel[0] + eps;
-            vlevel[nlevel] = vlevel[nlevel] - eps;
-        }
-
-
-        for (let vi = 0; vi < vlevel.length; vi++) {
+        // if (vlevel[0] >= vlevel[1]) {
+        //     vlevel[0] = vlevel[0] - eps;
+        //     vlevel[nlevel] = vlevel[nlevel] + eps;
+        // } else {
+        //     vlevel[0] = vlevel[0] + eps;
+        //     vlevel[nlevel] = vlevel[nlevel] - eps;
+        // }
+        
+        for (let vi = vlevel.length - 1; vi >= 0; vi--) {
             const ve = vlevel[vi];
             var text_space = max_y / nlevel;
             var cr = 4 * vi / nlevel;
@@ -355,18 +358,22 @@ function mydraw2d_canvas() {
         var dl = (minmax_data[1].u - minmax_data[0].u) / nlevel;
 
         for (let i = 0; i <= nlevel; i++) {
-            vlevel.push(minmax_data[0].u + i * dl);
+            let tempval = minmax_data[0].u + i * dl;
+            if (Math.abs(tempval) < eps) {
+                tempval = 0;
+            }
+            vlevel.push(tempval);
         }
 
-        if (vlevel[0] > vlevel[1]) {
-            vlevel[0] = vlevel[0] - eps;
-            vlevel[nlevel] = vlevel[nlevel] + eps;
-        } else {
-            vlevel[0] = vlevel[0] + eps;
-            vlevel[nlevel] = vlevel[nlevel] - eps;
-        }
+        // if (vlevel[0] > vlevel[1]) {
+        //     vlevel[0] = vlevel[0] - eps;
+        //     vlevel[nlevel] = vlevel[nlevel] + eps;
+        // } else {
+        //     vlevel[0] = vlevel[0] + eps;
+        //     vlevel[nlevel] = vlevel[nlevel] - eps;
+        // }
 
-        for (let vi = 0; vi < vlevel.length; vi++) {
+        for (let vi = vlevel.length-1; vi >= 0; vi--) {
             const ve = vlevel[vi];
             var text_space = max_y / nlevel;
             var cr = 4 * vi / nlevel;
