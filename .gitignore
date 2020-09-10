@@ -5,3 +5,4 @@ webplot.dylib
 *.ps
 test/*
 static/cache/*
+!static/cache/.gitignore
