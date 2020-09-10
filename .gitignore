@@ -6,3 +6,4 @@ webplot.dylib
 test/*
 static/cache/*
 !static/cache/.gitignore
+.vscode
