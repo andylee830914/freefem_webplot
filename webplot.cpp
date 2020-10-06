@@ -5,6 +5,7 @@
 #include <csignal>
 #include <filesystem>
 #include <zlib.h>
+#include <typeinfo>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
@@ -22,7 +23,7 @@ namespace{
     const char DEFAULT_CMM[] = "";
     const char DEFAULT_HOST[] = "localhost";
     const double DEFAULT_PORT = 1234;
-    const char BASE_DIR[] =  "./static";
+    const char BASE_DIR[] =  "/Users/andylee/Work/cpp_web/static";
     int plotcount = 0;
 }
 
@@ -103,6 +104,35 @@ class WEBPLOT_Op : public E_F0mps
     AnyType operator()(Stack stack) const;
 };
 
+class WEBMPIPLOT_Op : public E_F0mps
+{
+  public:
+    Expression eTh, ef;
+    static const int n_name_param = 2;
+    static basicAC_F0::name_and_type name_param[];
+    Expression nargs[n_name_param];
+
+    double arg(int i, Stack stack, double defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    long arg(int i, Stack stack, long defvalue) const { return nargs[i] ? GetAny<long>((*nargs[i])(stack)) : defvalue; }
+    KN<double> *arg(int i, Stack stack, KN<double> *defvalue) const { return nargs[i] ? GetAny<KN<double> *>((*nargs[i])(stack)) : defvalue; }
+    bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
+
+  public:
+    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression th)
+    : eTh(th), ef(0)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+
+    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression f, Expression th)
+    : eTh(th), ef(f)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+
+    AnyType operator()(Stack stack) const;
+};
+
 AnyType SERVER_Op::operator()(Stack stack) const
 {
 
@@ -126,7 +156,7 @@ AnyType SERVER_Op::operator()(Stack stack) const
     });
 
     svr.Get("/", [](const Request &req, Response &res) {
-        ifstream ifs("index.html");
+        ifstream ifs("/Users/andylee/Work/cpp_web/index.html");
         std::string hp_html((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
         res.set_content(hp_html, "text/html");
@@ -149,7 +179,13 @@ AnyType SERVER_Op::operator()(Stack stack) const
     return 0.0;
 }
 
-
+basicAC_F0::name_and_type WEBMPIPLOT_Op::name_param[] =
+    {
+        // modify static const int n_name_param = ... in the above member
+        {"cmm", &typeid(string *)},
+        {"fetype", &typeid(string *)}
+        //{  "logscale",  &typeid(bool)} // not implemented
+};
 
 
 basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
@@ -329,7 +365,7 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     gzwrite(gz_edge_file, (void *)(edge_json.str().data()), file_edge_size);
     gzclose(gz_edge_file);
 
-    if (plotcount == 1)
+    // if (plotcount == 1)
     {
         std::ostringstream basic_name;
         basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json.gz";
@@ -352,7 +388,57 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
     return true;
 }
 
+AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
+{
+    std::cout << "hello world" << std::endl;
+    int mpinum;
+    if(ef){
+        FEbaseArrayKn<double>* ptA = GetAny<FEbaseArrayKn< double >*>((*ef)(stack));
+        mpinum = ptA->N;
+    }
 
+    // if(eTh){
+        KN<pmesh>* ptR = GetAny<KN<pmesh>*>((*eTh)(stack));
+        // mpinum = ptR->n;
+    // }
+    // 
+    // ffassert(ptR);
+    
+    // mpinum = ptR->n;
+    std::cout << "hello world("<<1<<")"<<mpinum<< std::endl;
+    // KN<double>* ptA = GetAny<KN<double>*>((*ef)(stack));
+
+    for(int i=0;i<mpinum;i++){
+        const Mesh *const pTh = ptR -> operator[](i);
+        ffassert(pTh);
+        const Fem2D::Mesh &Th(*pTh);
+        const int nVertices = Th.nv;
+        const int nTriangles = Th.nt;
+
+        // for (int it = 0; it < 1; it++)
+        // {
+        //     for (int iv = 0; iv < 3; iv++)
+        //     {
+
+        //         int ii = Th(it, iv);
+        //         MeshPointStack(stack)->setP(pTh, it, iv);
+        //         double temp=0;
+        //         // if (ef) {
+        //         //     temp = GetAny<FEbaseArrayKn< double >*>((*ef)(stack))->get(i)-> operator[](ii);
+        //         // }else{
+        //         //     temp = 0;
+        //         // }
+        //         std::cout << temp << std::endl;
+        //     }
+        // }
+        std::cout << "hello world("<<i<<")"<<nVertices<< std::endl;
+
+    }
+
+    
+
+    return true;
+}
 
 
 class WEBPLOT : public OneOperator
@@ -362,6 +448,8 @@ class WEBPLOT : public OneOperator
   public:
     WEBPLOT()    : OneOperator(atype<long>(),                  atype<const Mesh *>()), argc(1) {}
     WEBPLOT(int) : OneOperator(atype<long>(), atype<double>(), atype<const Mesh *>()), argc(2) {}
+    WEBPLOT(int,int)    : OneOperator(atype<long>(),           atype<KN<pmesh>*>()), argc(3) {}
+    WEBPLOT(int,int,int)    : OneOperator(atype<long>(),atype<FEbaseArrayKn< double > *>(), atype<KN<pmesh>*>()), argc(4) {}
 
     E_F0 *code(const basicAC_F0 &args) const
     {
@@ -369,6 +457,10 @@ class WEBPLOT : public OneOperator
             return new WEBPLOT_Op(args, t[0]->CastTo(args[0]));
         else if (argc == 2)
             return new WEBPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]));
+        else if (argc == 3)
+            return new WEBMPIPLOT_Op(args, t[0]->CastTo(args[0]));
+        else if (argc == 4)
+            return new WEBMPIPLOT_Op(args,t[0]->CastTo(args[0]), t[0]->CastTo(args[0]));
         else
             ffassert(0);
     }
@@ -395,6 +487,8 @@ static void init(){
     Global.Add("server", "(", new SERVER());
     Global.Add("webplot", "(", new WEBPLOT());
     Global.Add("webplot", "(", new WEBPLOT(0));
+    Global.Add("webplot", "(", new WEBPLOT(0,0));
+    Global.Add("webplot", "(", new WEBPLOT(0,0,0));
 }
 
 LOADFUNC(init);
