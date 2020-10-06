@@ -160,11 +160,11 @@
 
 </body>
 <script>
-    var mesh_data;
-    var vertex_data;
-    var edge_data;
-    var minmax_data;
-    var basic_data;
+    var mesh_data=[];
+    var vertex_data = [];
+    var edge_data = [];
+    var minmax_data = 0;
+    var basic_data = 0;
     var cmm_data;
     var pause = 1;
     var preview = 1;
@@ -176,6 +176,7 @@
     var cprofile = cprofile3;
     var now_file = 1;
     var total_file = 0;
+    var is_now_MPI = 0;
 
     function play() {
         if (pause) {
@@ -188,7 +189,6 @@
     }
 
     function reload() {
-        // basic_ajax();
         $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
             if ($("#3dstart").text() == '2D') {
                 mydraw2d();
@@ -198,6 +198,28 @@
             $("#nowpage").text(now_file + '/' + total_file);
         })
     }
+    function mpi_reload() {
+        promiseArr = [];
+        for (var i = 0; i < mpisize; i++) {
+            var promise = new Promise(function (resolve, reject) {
+                (function (index) {
+                    $.when(mpi_basic_ajax(index),mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function(){
+                        resolve('outputIfany');
+                    })
+                })(i+1);
+            });
+            promiseArr.push(promise);
+        }
+        Promise.all(promiseArr).then(function (values) {
+            if ($("#3dstart").text() == '2D') {
+                mydraw2d();
+            } else {
+                mydraw3d();
+            }
+            $("#nowpage").text(now_file + '/' + total_file);
+        });
+    }
+    
     function mesh_ajax() {
         return $.ajax({
             url: './cache/mesh' + now_file + '.json.gz',
@@ -231,7 +253,7 @@
 
     function edge_ajax() {
         return $.ajax({
-            url: './cache/edge' + now_file + '.json.gz',
+            url: './cache/edge' + now_file +'.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -242,20 +264,121 @@
         })
     }
 
+    function mpi_mesh_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/mesh' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            console.log(m.mesh);
+            mesh_data = mesh_data.concat(m.mesh);
+            // console.log(mesh_data);
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_vertex_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/vertex' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            vertex_data = vertex_data.concat(m.position);
+            if (minmax_data == 0) {
+                minmax_data = m.minmax;
+            }else{
+                if (m.minmax[0]['u'] <= minmax_data[0]['u']) {
+                    minmax_data[0] = m.minmax[0];
+                }
+                if (m.minmax[1]['u'] >= minmax_data[1]['u']) {
+                    minmax_data[1] = m.minmax[1];
+                }
+            }
+            if (mpirank == 1) {
+                cmm_data = m.cmm;
+                if (cmm_data) {
+                    $("#comment").text(cmm_data);
+                }  
+            }
+            
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_edge_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/edge' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            edge_data = edge_data.concat(m.edge);
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_basic_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/basic' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            if (basic_data == 0) {
+                basic_data = m;
+            }else{
+                for (let i = 0; i < 2; i++) {
+                    if (m.bounds[0][i] <= basic_data.bounds[0][i]) {
+                        basic_data.bounds[0][i] = m.bounds[0][i];
+                    }
+                    if (m.bounds[1][i] >= basic_data.bounds[1][i]) {
+                        basic_data.bounds[1][i] = m.bounds[1][i];
+                    }
+                }
+                
+            }
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
     function basic_ajax() {
+        mesh_data = [];
+        vertex_data = [];
+        edge_data = [];
+        minmax_data = 0;
+        basic_data = 0;
         return $.ajax({
             url: './cache/basic' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
-            // console.log(m);
-            basic_data = m;
-            $("#canvas_3d").remove();
-            init();
-            animate();
-            reload();
-            if ($('#3dstart').text() == '2D') {
-                $("#canvas_3d").hide();
+            console.log(m);
+            if (m["mpi"] == "True") {
+                console.log('hello');
+                mpisize = m.size;
+                is_now_MPI = 1;
+                mpi_reload();
+                if ($('#3dstart').text() == '2D') {
+                    $("#canvas_3d").hide();
+                }
+            }else{
+            console.log('hello1');
+
+                is_now_MPI = 0;
+                basic_data = m;
+                $("#canvas_3d").remove();
+                // init();
+                // animate();
+                reload();
+                if ($('#3dstart').text() == '2D') {
+                    $("#canvas_3d").hide();
+                }
             }
+            
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -279,9 +402,9 @@
     function setnowpage(page) {
         if (now_file != page) {
             now_file = page;
-            // basic_ajax();
+            basic_ajax();
             now_file = page;
-            reload();
+            // basic_ajax();
 
         }
     }
@@ -335,6 +458,8 @@
                 // disenable camera orbit control
                 controls.enabled = false;
             } else {
+                // init();
+                // animate();
                 //3D mode
                 $(this).text('3D');
                 $("#new_plot").children('svg').hide();
@@ -346,7 +471,9 @@
                 // enable camera orbit control
                 controls.enabled = true;
             }
-            reload();
+            basic_ajax();
+
+            // reload();
 
 
         });

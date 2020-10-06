@@ -22,7 +22,7 @@ namespace{
     const char DEFAULT_CMM[] = "";
     const char DEFAULT_HOST[] = "localhost";
     const double DEFAULT_PORT = 1234;
-    const char BASE_DIR[] =  "./static";
+    const char BASE_DIR[] =  "/Users/andylee/Work/cpp_web/static";
     int plotcount = 0;
 }
 
@@ -89,13 +89,13 @@ class WEBPLOT_Op : public E_F0mps
 
   public:
     WEBPLOT_Op(const basicAC_F0 &args, Expression th)
-    : eTh(th), ef(0), empi(0)
+    : eTh(th), ef(0)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
 
     WEBPLOT_Op(const basicAC_F0 &args, Expression f, Expression th)
-    : eTh(th), ef(f), empi(0)
+    : eTh(th), ef(f)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
@@ -106,7 +106,7 @@ class WEBPLOT_Op : public E_F0mps
 class WEBMPIPLOT_Op : public E_F0mps
 {
   public:
-    Expression eTh, ef, empi;
+    Expression eTh, ef, empirank, empisize;
     static const int n_name_param = 2;
     static basicAC_F0::name_and_type name_param[];
     Expression nargs[n_name_param];
@@ -118,14 +118,14 @@ class WEBMPIPLOT_Op : public E_F0mps
 
   public:
 
-    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression th, Expression mpi)
-    : eTh(th), ef(0), empi(mpi)
+    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression th, Expression mpirank, Expression mpisize)
+    : eTh(th), ef(0), empirank(mpirank), empisize(mpisize)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
 
-    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression f, Expression th, Expression mpi)
-    : eTh(th), ef(f), empi(mpi)
+    WEBMPIPLOT_Op(const basicAC_F0 &args, Expression f, Expression th, Expression mpirank, Expression mpisize)
+    : eTh(th), ef(f), empirank(mpirank), empisize(mpisize)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
@@ -156,7 +156,7 @@ AnyType SERVER_Op::operator()(Stack stack) const
     });
 
     svr.Get("/", [](const Request &req, Response &res) {
-        ifstream ifs("index.html");
+        ifstream ifs("/Users/andylee/Work/cpp_web/index.html");
         std::string hp_html((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
         res.set_content(hp_html, "text/html");
@@ -179,7 +179,13 @@ AnyType SERVER_Op::operator()(Stack stack) const
     return 0.0;
 }
 
-
+basicAC_F0::name_and_type WEBMPIPLOT_Op::name_param[] =
+    {
+        // modify static const int n_name_param = ... in the above member
+        {"cmm", &typeid(string *)},
+        {"fetype", &typeid(string *)}
+        //{  "logscale",  &typeid(bool)} // not implemented
+};
 
 
 basicAC_F0::name_and_type WEBPLOT_Op::name_param[] =
@@ -384,13 +390,14 @@ AnyType WEBPLOT_Op::operator()(Stack stack) const
 
 AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
 {
-    if (empi){
-        int mpi_time = GetAny<int>((*empi)(stack));
-        std::cout << "mpigroup:" << mpi_time << std::endl;
+    int mpi_rank = GetAny<long>((*empirank)(stack));
+    int mpi_size = GetAny<long>((*empisize)(stack));
+    if (mpi_rank == 1){
+        plotcount = plotcount+1;
     }
+
     const std::string cmm = get_string(stack, nargs[0], DEFAULT_CMM);
     const std::string fetype = get_string(stack, nargs[1], DEFAULT_FETYPE);
-    plotcount = plotcount+1;
     const Mesh *const pTh = GetAny<const Mesh *const>((*eTh)(stack));
     ffassert(pTh);
     const Fem2D::Mesh &Th(*pTh);
@@ -421,7 +428,7 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
     }
 
     std::ostringstream mesh_name;
-    mesh_name << BASE_DIR << "/cache/mesh" << plotcount << ".json.gz";
+    mesh_name << BASE_DIR << "/cache/mesh" << plotcount << "_" << mpi_rank << ".json.gz";
     gzFile gz_mesh_file;
     gz_mesh_file = gzopen(mesh_name.str().c_str(), "wb");
     std::stringstream mesh_json;
@@ -489,7 +496,7 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
     gzclose(gz_mesh_file);
 
     std::ostringstream vertex_name;
-    vertex_name << BASE_DIR << "/cache/vertex" << plotcount << ".json.gz";
+    vertex_name << BASE_DIR << "/cache/vertex" << plotcount << "_" << mpi_rank << ".json.gz";
     gzFile gz_vertex_file;
     gz_vertex_file = gzopen(vertex_name.str().c_str(), "wb");
     std::stringstream vertex_json;
@@ -518,7 +525,7 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
     gzclose(gz_vertex_file);
 
     std::ostringstream edge_name;
-    edge_name << BASE_DIR << "/cache/edge" << plotcount << ".json.gz";
+    edge_name << BASE_DIR << "/cache/edge" << plotcount << "_" << mpi_rank << ".json.gz";
     gzFile gz_edge_file;
     gz_edge_file = gzopen(edge_name.str().c_str(), "wb");
     std::stringstream edge_json;
@@ -546,7 +553,27 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
     gzwrite(gz_edge_file, (void *)(edge_json.str().data()), file_edge_size);
     gzclose(gz_edge_file);
 
-    if (plotcount == 1)
+    // if (plotcount == 1)
+    {
+        std::ostringstream basic_name;
+        basic_name << BASE_DIR << "/cache/basic" << plotcount << "_" << mpi_rank << ".json.gz";
+        gzFile gz_basic_file;
+        gz_basic_file = gzopen(basic_name.str().c_str(), "wb");
+        std::stringstream basic_json;
+
+        basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
+        basic_json << "{" << endl;
+        basic_json << " \"rank\": "<< mpi_rank <<"," << endl;
+        basic_json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl;
+        basic_json << "           [" << x1 << "," << y1 << "]]" << endl;
+        basic_json << "}" << endl;
+        unsigned long int file_basic_size = sizeof(char) * basic_json.str().size();
+        // gzwrite(gz_basic_file, (void *)&file_basic_size, sizeof(file_basic_size));
+        gzwrite(gz_basic_file, (void *)(basic_json.str().data()), file_basic_size);
+        gzclose(gz_basic_file);
+    }
+
+    if (mpi_rank == 1)
     {
         std::ostringstream basic_name;
         basic_name << BASE_DIR << "/cache/basic" << plotcount << ".json.gz";
@@ -556,8 +583,8 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
 
         basic_json << std::setiosflags(std::ios::scientific) << std::setprecision(16);
         basic_json << "{" << endl;
-        basic_json << " \"bounds\":[[" << x0 << "," << y0 << "]," << endl;
-        basic_json << "           [" << x1 << "," << y1 << "]]" << endl;
+        basic_json << " \"mpi\": \"True\"," << endl;
+        basic_json << " \"size\":"<< mpi_size << endl;
         basic_json << "}" << endl;
         unsigned long int file_basic_size = sizeof(char) * basic_json.str().size();
         // gzwrite(gz_basic_file, (void *)&file_basic_size, sizeof(file_basic_size));
@@ -578,8 +605,8 @@ class WEBPLOT : public OneOperator
   public:
     WEBPLOT()    : OneOperator(atype<long>(),                  atype<const Mesh *>()), argc(1) {}
     WEBPLOT(int) : OneOperator(atype<long>(), atype<double>(), atype<const Mesh *>()), argc(2) {}
-    WEBPLOT(int,int)     : OneOperator(atype<long>(),                  atype<const Mesh *>(), atype<int>()), argc(3) {}
-    WEBPLOT(int,int,int) : OneOperator(atype<long>(), atype<double>(), atype<const Mesh *>(), atype<int>()), argc(4) {}
+    WEBPLOT(int,int)     : OneOperator(atype<long>(),                  atype<const Mesh *>(), atype<long>(), atype<long>()), argc(3) {}
+    WEBPLOT(int,int,int) : OneOperator(atype<long>(), atype<double>(), atype<const Mesh *>(), atype<long>(), atype<long>()), argc(4) {}
 
     E_F0 *code(const basicAC_F0 &args) const
     {
@@ -588,9 +615,9 @@ class WEBPLOT : public OneOperator
         else if (argc == 2)
             return new WEBPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]));
         else if (argc == 3)
-            return new WEBMPIPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]));
+            return new WEBMPIPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]), t[2]->CastTo(args[2]));
         else if (argc == 4)
-            return new WEBMPIPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]), t[2]->CastTo(args[1]));
+            return new WEBMPIPLOT_Op(args, t[0]->CastTo(args[0]), t[1]->CastTo(args[1]), t[2]->CastTo(args[2]), t[3]->CastTo(args[3]));
         else
             ffassert(0);
     }
