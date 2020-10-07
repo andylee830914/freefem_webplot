@@ -22,7 +22,7 @@ namespace{
     const char DEFAULT_CMM[] = "";
     const char DEFAULT_HOST[] = "localhost";
     const double DEFAULT_PORT = 1234;
-    const char BASE_DIR[] =  "/Users/andylee/Work/cpp_web/static";
+    const char BASE_DIR[] =  ".";
     int plotcount = 0;
 }
 
@@ -55,7 +55,7 @@ void signalHandler(int signum)
 class SERVER_Op : public E_F0
 {
   public:
-    static const int n_name_param = 2;
+    static const int n_name_param = 3;
     static basicAC_F0::name_and_type name_param[];
     Expression nargs[n_name_param];
 
@@ -137,9 +137,12 @@ AnyType SERVER_Op::operator()(Stack stack) const
 {
 
     const std::string host = get_string(stack, nargs[0], DEFAULT_HOST);
+    const std::string base = get_string(stack, nargs[2], BASE_DIR);
     const int port = static_cast<int>(arg(1,stack,DEFAULT_PORT));
 
-    svr.set_base_dir(BASE_DIR);
+    std::ostringstream static_path;
+    static_path << base << "/static";
+    svr.set_base_dir(static_path.str().c_str());
 
     svr.set_file_request_handler([&](const Request &req, Response &res) {
         if (req.path.find(".json.gz") != string::npos)
@@ -155,8 +158,10 @@ AnyType SERVER_Op::operator()(Stack stack) const
           
     });
 
-    svr.Get("/", [](const Request &req, Response &res) {
-        ifstream ifs("/Users/andylee/Work/cpp_web/index.html");
+    svr.Get("/", [base](const Request &req, Response &res) {
+        std::ostringstream path;
+        path << base << "/index.html";
+        ifstream ifs(path.str().c_str());
         std::string hp_html((std::istreambuf_iterator<char>(ifs)),
                             std::istreambuf_iterator<char>());
         res.set_content(hp_html, "text/html");
@@ -200,7 +205,8 @@ basicAC_F0::name_and_type SERVER_Op::name_param[] =
     {
         // modify static const int n_name_param = ... in the above member
         {"host", &typeid(string *)},
-        {"port", &typeid(double)}
+        {"port", &typeid(double)},
+        {"basedir", &typeid(string *)}
         //{  "logscale",  &typeid(bool)} // not implemented
 };
 
