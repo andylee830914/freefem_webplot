@@ -199,11 +199,15 @@
         })
     }
     function mpi_reload() {
-        promiseArr = [];
+        mesh_data = [];
+        vertex_data = [];
+        edge_data = [];
+        minmax_data = 0;
+        var promiseArr = [];
         for (var i = 0; i < mpisize; i++) {
             var promise = new Promise(function (resolve, reject) {
                 (function (index) {
-                    $.when(mpi_basic_ajax(index),mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function(){
+                    $.when(mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function(){
                         resolve('outputIfany');
                     })
                 })(i+1);
@@ -347,32 +351,42 @@
     }
 
     function basic_ajax() {
-        mesh_data = [];
-        vertex_data = [];
-        edge_data = [];
-        minmax_data = 0;
-        basic_data = 0;
         return $.ajax({
             url: './cache/basic' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
             console.log(m);
             if (m["mpi"] == "True") {
-                console.log('hello');
                 mpisize = m.size;
                 is_now_MPI = 1;
-                mpi_reload();
-                if ($('#3dstart').text() == '2D') {
-                    $("#canvas_3d").hide();
+                var promiseArr = [];
+                for (var i = 0; i < mpisize; i++) {
+                    var promise = new Promise(function (resolve, reject) {
+                        (function (index) {
+                            $.when(mpi_basic_ajax(index)).done(function () {
+                                resolve('outputIfany');
+                            })
+                        })(i + 1);
+                    });
+                    promiseArr.push(promise);
                 }
-            }else{
-            console.log('hello1');
+                Promise.all(promiseArr).then(function (values) {
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    mpi_reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                });
+                
 
+            }else{
                 is_now_MPI = 0;
                 basic_data = m;
                 $("#canvas_3d").remove();
-                // init();
-                // animate();
+                init();
+                animate();
                 reload();
                 if ($('#3dstart').text() == '2D') {
                     $("#canvas_3d").hide();
@@ -402,9 +416,14 @@
     function setnowpage(page) {
         if (now_file != page) {
             now_file = page;
-            basic_ajax();
-            now_file = page;
             // basic_ajax();
+            // now_file = page;
+            // basic_ajax();
+            if (is_now_MPI == 1) {
+                mpi_reload();
+            } else {
+                reload();
+            }
 
         }
     }
@@ -471,7 +490,12 @@
                 // enable camera orbit control
                 controls.enabled = true;
             }
-            basic_ajax();
+            // basic_ajax();
+            if (is_now_MPI == 1) {
+                mpi_reload();
+            }else{
+                reload();
+            }
 
             // reload();
 
