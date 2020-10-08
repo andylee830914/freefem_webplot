@@ -336,7 +336,6 @@ function mydraw3dmesh() {
         clippingPlanes: clipPlanes,
         clipIntersection: $("#intersec_check").is(':checked')
     });
-    console.log(geometry)
 
     mesh = new THREE.Mesh(geometry, material);
 

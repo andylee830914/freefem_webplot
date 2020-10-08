@@ -644,7 +644,6 @@ AnyType WEBMPIPLOT_Op::operator()(Stack stack) const
 
 AnyType WEB3PLOT_Op::operator()(Stack stack) const
 {
-    std::cout << "hello web3" << std::endl;
     const std::string cmm = get_string(stack, nargs[0], DEFAULT_CMM);
     const std::string fetype = get_string(stack, nargs[1], DEFAULT_FETYPE);
     plotcount = plotcount+1;
@@ -653,7 +652,6 @@ AnyType WEB3PLOT_Op::operator()(Stack stack) const
     const Mesh3 &Th = *pTh;
     const int nVertices = Th.nv;
     const int nTriangles = Th.nt;
-    std::cout << nVertices << "," << nTriangles << std::endl;
 
     R3 Pmin, Pmax;
     Th.BoundingBox(Pmin, Pmax);
@@ -742,7 +740,7 @@ AnyType WEB3PLOT_Op::operator()(Stack stack) const
     }
     mesh_json << "  ]" << endl;
     mesh_json << "}" << endl;
-    cout << myfmin << "," << myfmax << endl;
+
     unsigned long int file_mesh_size = sizeof(char) * mesh_json.str().size();
     // gzwrite(gz_mesh_file, (void *)&file_mesh_size, sizeof(file_mesh_size));
     gzwrite(gz_mesh_file, (void *)(mesh_json.str().data()), file_mesh_size);
