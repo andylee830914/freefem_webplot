@@ -65,7 +65,7 @@
                             </div>
                             <div class="form-group form-check">
                                 <label for="nbiso">Number of isovalues</label>
-                                <input type="number" class="form-control" id="nbiso" value="20">
+                                <input type="number" class="form-control" id="nbiso" value="15">
                             </div>
                             <div class="form-group form-check subcheck">
                                 <input type="checkbox" class="form-check-input" id="colorbar" checked>
@@ -90,6 +90,17 @@
                             <div class="form-group form-check">
                                 <input type="checkbox" class="form-check-input" id="wireframe">
                                 <label class="form-check-label" for="wireframe">wireframe</label>
+                            </div>
+                            <div class="form-group form-check mesh3">
+                                <input type="checkbox" class="form-check-input" id="intersec_check">
+                                <label  for="intersection">Intersection</label><br>
+                                <label for="intersection_x">x</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_x">
+                                <label for="intersection_y">y</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_y">
+                                <label for="intersection_z">z</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_z">
+
                             </div>
                             <h6>Set View</h6>
                             <div class="form-group form-check">
@@ -193,7 +204,11 @@
             if ($("#3dstart").text() == '2D') {
                 mydraw2d();
             } else {
-                mydraw3d();
+                if (basic_data['type'] == 'Mesh3') {
+                    mydraw3dmesh();
+                } else {
+                    mydraw3d();
+                }
             }
             $("#nowpage").text(now_file + '/' + total_file);
         })
@@ -384,13 +399,26 @@
             }else{
                 is_now_MPI = 0;
                 basic_data = m;
-                $("#canvas_3d").remove();
-                init();
-                animate();
-                reload();
-                if ($('#3dstart').text() == '2D') {
-                    $("#canvas_3d").hide();
-                }
+                if (m["type"] == "Mesh") {
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                }else if (m["type"] == "Mesh3"){
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                    $('#3dstart').click();
+                } 
+                
+                
             }
             
         }).fail((xhr, status, error) => {
@@ -459,7 +487,11 @@
             if ($("#3dstart").text() == '2D') {
                 mydraw2d()
             } else {
-                mydraw3d();
+                if(basic_data['type']== 'Mesh3'){
+                    mydraw3dmesh();
+                }else{
+                    mydraw3d();
+                }
             }
         });
 
@@ -486,6 +518,9 @@
                 $("#canvas_3d").show();
                 $('#2d_control').hide();
                 $('#3d_control').show();
+                if (basic_data['type'] != 'Mesh3') {
+                    $('.mesh3').hide();
+                }
                 // mydraw3d();
                 // enable camera orbit control
                 controls.enabled = true;
