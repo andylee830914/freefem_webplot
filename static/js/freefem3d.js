@@ -228,7 +228,7 @@ function mydraw3dmesh() {
         intersec_z = 1 * sc;
     }
     clipPlanes = [
-        new THREE.Plane(new THREE.Vector3(1, 0, 0), intersec_x),
+        new THREE.Plane(new THREE.Vector3(1, 0, 1), intersec_x),
         new THREE.Plane(new THREE.Vector3(0, -1, 0), intersec_y),
         new THREE.Plane(new THREE.Vector3(0, 0, -1), intersec_z)
     ];
@@ -254,7 +254,7 @@ function mydraw3dmesh() {
         var tempcolor = [];
         if ((minmax_data[1].u - minmax_data[0].u) > 0) {
             for (let index = 0; index < 4; index++) {
-                var cr = 4 * e[index].u / (minmax_data[1].u - minmax_data[0].u);
+                var cr = 4 * (e[index].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
                 var ci = Math.floor(cr);
                 if (ci == 4) {
                     ci = ci - 1;
