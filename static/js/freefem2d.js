@@ -172,7 +172,7 @@ function mydraw2d() {
         //     vlevel[0] = vlevel[0] + eps;
         //     vlevel[nlevel] = vlevel[nlevel] - eps;
         // }
-        
+        var is_P0 = false
         for (let vi = vlevel.length - 1; vi >= 0; vi--) {
             const ve = vlevel[vi];
             var text_space = max_y / nlevel;
@@ -215,8 +215,19 @@ function mydraw2d() {
                         level_line.push([(rate * e[1].x + (1 - rate) * e[0].x) * w, (rate * e[1].y + (1 - rate) * e[0].y) * h])
                     }
                 }
+                if ((e[0].u == e[1].u) && (e[0].u == e[2].u) && ((minmax_data[1].u - minmax_data[0].u) > 0)) {
+                    var cr = 4 * (e[0].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
+                    var ci = Math.floor(cr);
+                    if (ci == 4) {
+                        ci = ci - 1;
+                    } 
+                    var polyline = draw.polygon([[e[0].x * w, e[0].y * h], [e[1].x * w, e[1].y * h], [e[2].x * w, e[2].y * h]])
+                    polyline.fill('none').stroke({ color: color[ci].at(cr - ci).toHex(), width: 1 / 500 * sc })
+                
+                }else{
+                    draw.polyline(level_line).fill('none').stroke({ width: 1 / 250 * sc, color: color[ci].at(cr - ci).toHex() });
+                }
 
-                draw.polyline(level_line).fill('none').stroke({ width: 1 / 250 * sc, color: color[ci].at(cr - ci).toHex() });
             }
         }
     }
@@ -364,7 +375,6 @@ function mydraw2d_canvas() {
             }
             vlevel.push(tempval);
         }
-
         // if (vlevel[0] > vlevel[1]) {
         //     vlevel[0] = vlevel[0] - eps;
         //     vlevel[nlevel] = vlevel[nlevel] + eps;
@@ -372,7 +382,7 @@ function mydraw2d_canvas() {
         //     vlevel[0] = vlevel[0] + eps;
         //     vlevel[nlevel] = vlevel[nlevel] - eps;
         // }
-
+        var is_P0 = false
         for (let vi = vlevel.length-1; vi >= 0; vi--) {
             const ve = vlevel[vi];
             var text_space = max_y / nlevel;
@@ -388,41 +398,63 @@ function mydraw2d_canvas() {
                 ctx.fillText(vlevel[vi].toExponential(3), (basic_data.bounds[1][0] + draw_viewbox_w_scale - 0.03 * max_y-c.x) * w, (basic_data.bounds[1][1] - text_space * (vlevel.length - vi-1)+c.y) * h);
             }
 
-            for (let i = 0; i < mesh_data.length; i++) {
-                const e = mesh_data[i];
-                var level_line = [];
-                if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
-                    //at 1st edge of the element
-                    var rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
-                    level_line.push([(rate * (e[1].x - c.x) + (1 - rate) * (e[0].x - c.x)) * w, (rate * (e[1].y + c.y) + (1 - rate) * (e[0].y + c.y)) * h])
-                }
-                if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
-                    //at 2nd edge of the element
-                    var rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
-                    level_line.push([(rate * (e[2].x - c.x) + (1 - rate) * (e[1].x - c.x)) * w, (rate * (e[2].y + c.y) + (1 - rate) * (e[1].y + c.y)) * h])
-                }
-                if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
-                    //at 3rd edge of the element
-                    var rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
-                    level_line.push([(rate * (e[0].x - c.x) + (1 - rate) * (e[2].x - c.x)) * w, (rate * (e[0].y + c.y) + (1 - rate) * (e[2].y + c.y)) * h])
-                }
-                ctx.beginPath();
-                level_line.forEach((e,i) => {
-                    if (i==0) {
-                        ctx.moveTo(level_line[i][0], level_line[i][1]);
-                    }else{
-                        ctx.lineTo(level_line[i][0], level_line[i][1]);
+            if (!is_P0) {
+                for (let i = 0; i < mesh_data.length; i++) {
+                    const e = mesh_data[i];
+                    var level_line = [];
+                    if ((ve >= e[0].u && ve <= e[1].u) || (ve <= e[0].u && ve >= e[1].u)) {
+                        //at 1st edge of the element
+                        var rate = (ve - e[0].u) / (e[1].u - e[0].u) || 0;
+                        level_line.push([(rate * (e[1].x - c.x) + (1 - rate) * (e[0].x - c.x)) * w, (rate * (e[1].y + c.y) + (1 - rate) * (e[0].y + c.y)) * h])
                     }
-                }); 
-                if (level_line.length > 2) {
-                    ctx.lineTo(level_line[0][0], level_line[0][1]);
-                }
-                
-                ctx.strokeStyle = color[ci].at(cr - ci).toHex();
-                ctx.lineWidth = 1 / 250 * sc;
-                ctx.stroke();
+                    if ((ve >= e[1].u && ve <= e[2].u) || (ve <= e[1].u && ve >= e[2].u)) {
+                        //at 2nd edge of the element
+                        var rate = (ve - e[1].u) / (e[2].u - e[1].u) || 0;
+                        level_line.push([(rate * (e[2].x - c.x) + (1 - rate) * (e[1].x - c.x)) * w, (rate * (e[2].y + c.y) + (1 - rate) * (e[1].y + c.y)) * h])
+                    }
+                    if ((ve >= e[2].u && ve <= e[0].u) || (ve <= e[2].u && ve >= e[0].u)) {
+                        //at 3rd edge of the element
+                        var rate = (ve - e[2].u) / (e[0].u - e[2].u) || 0;
+                        level_line.push([(rate * (e[0].x - c.x) + (1 - rate) * (e[2].x - c.x)) * w, (rate * (e[0].y + c.y) + (1 - rate) * (e[2].y + c.y)) * h])
+                    }
+                    if ((e[0].u == e[1].u) && (e[0].u == e[2].u) && ((minmax_data[1].u - minmax_data[0].u) > 0)) {
+                        ctx.beginPath();
+                        ctx.moveTo((e[0].x - c.x) * w, (e[0].y + c.y) * h);
+                        ctx.lineTo((e[1].x - c.x) * w, (e[1].y + c.y) * h);
+                        ctx.lineTo((e[2].x - c.x) * w, (e[2].y + c.y) * h);
+                        ctx.lineTo((e[0].x - c.x) * w, (e[0].y + c.y) * h);
+                        var cr = 4 * (e[0].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
+                        var ci = Math.floor(cr);
+                        if (ci == 4) {
+                            ci = ci - 1;
+                        }
+                        ctx.strokeStyle = color[ci].at(cr - ci).toHex();
+                        ctx.lineWidth = 1 / 500 * sc;
+                        ctx.closePath();
+                        ctx.stroke();
+                        is_P0 = true;
+                    } else {
+                        ctx.beginPath();
+                        level_line.forEach((e, i) => {
+                            if (i == 0) {
+                                ctx.moveTo(level_line[i][0], level_line[i][1]);
+                            } else {
+                                ctx.lineTo(level_line[i][0], level_line[i][1]);
+                            }
+                        });
+                        if (level_line.length > 2) {
+                            ctx.lineTo(level_line[0][0], level_line[0][1]);
+                        }
 
+                        ctx.strokeStyle = color[ci].at(cr - ci).toHex();
+                        ctx.lineWidth = 1 / 250 * sc;
+                        ctx.stroke();
+                    }
+
+
+                }
             }
+            
         }
     }
 }
