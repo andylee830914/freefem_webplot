@@ -31,7 +31,7 @@ function init() {
     frustumSize = sc + sc / 10;
     var aspect = 1;
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, 4 * frustumSize *max);
+    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, 8 * frustumSize *max);
     // camera = new THREE.PerspectiveCamera(frustumSize * max / 20, 1, 1, frustumSize * max);
     // camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, frustumSize * max);
     if (basic_data['type']=="Mesh3") {
@@ -205,10 +205,12 @@ function mydraw3dmesh() {
     scene.remove(mesh_border);
     scene.remove(axes);
     scene.remove(helpers);
+    max_z = basic_data.bounds[1][2] - basic_data.bounds[0][2];
+
     const sc = 1000;
     const xc = sc;
-    const yc = sc;
-    const zc = sc;
+    const yc = sc / (max_y / max_x);
+    const zc = sc / (max_z / max_x);
     renderer.localClippingEnabled = true;
     // const yc = sc / (max_y / max_x);
     // var zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
@@ -329,24 +331,33 @@ function mydraw3dmesh() {
 
     geometry.computeBoundingSphere();
 
-    var material = new THREE.MeshPhysicalMaterial({
-        color: 0xf0f0f0,
-        vertexColors: true, wireframe: $("#wireframe").is(':checked'),
-        wireframeLinewidth: 1 / 500 * sc,
-        clippingPlanes: clipPlanes,
-        clipIntersection: $("#intersec_check").is(':checked')
-    });
-
+    if ($("#intersec_check").is(':checked')){
+        var material = new THREE.MeshPhysicalMaterial({
+            color: 0xf0f0f0,
+            vertexColors: true, wireframe: $("#wireframe").is(':checked'),
+            wireframeLinewidth: 1 / 500 * sc,
+            clippingPlanes: clipPlanes,
+            clipIntersection: $("#intersec_check").is(':checked')
+        });
+        helpers = new THREE.Group();
+        helpers.add(new THREE.PlaneHelper(clipPlanes[0], sc, 0xff0000));
+        helpers.add(new THREE.PlaneHelper(clipPlanes[1], sc, 0x00ff00));
+        helpers.add(new THREE.PlaneHelper(clipPlanes[2], sc, 0x0000ff));
+        helpers.visible = $("#intersec_check").is(':checked');
+        scene.add(helpers);
+    }else{
+        var material = new THREE.MeshPhysicalMaterial({
+            color: 0xf0f0f0,
+            vertexColors: true, wireframe: $("#wireframe").is(':checked'),
+            wireframeLinewidth: 1 / 500 * sc,
+        });
+    }
+    
     mesh = new THREE.Mesh(geometry, material);
 
     scene.add(mesh);
 
-    helpers = new THREE.Group();
-    helpers.add(new THREE.PlaneHelper(clipPlanes[0], sc, 0xff0000));
-    helpers.add(new THREE.PlaneHelper(clipPlanes[1], sc, 0x00ff00));
-    helpers.add(new THREE.PlaneHelper(clipPlanes[2], sc, 0x0000ff));
-    helpers.visible = $("#intersec_check").is(':checked');
-    scene.add(helpers);
+
     if (!$("#wireframe").is(':checked') && $("#mesh3d").is(':checked')) {
         var material = new THREE.LineBasicMaterial({
             color: 0x000000,
