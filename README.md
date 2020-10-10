@@ -7,7 +7,6 @@ Demo : [https://freefem.andylee.tw](https://freefem.andylee.tw)
 ### Compile
 ```
 ff-c++ webplot.cpp
-clang++ -bundle -undefined dynamic_lookup -g webplot.o -o ./webplot.dylib
 ```
 ### Use in FreeFEM
 ```
@@ -45,3 +44,7 @@ Options
 |---|---|---|---|
 |string| host | run server on the IP address | "localhost" |
 | int | port | run server on the port | 1234 |
+|string| basedir | base directory | "." |
+
+### MPI Insterface
+with modified `"macro_ddm.idp"` for webplot
