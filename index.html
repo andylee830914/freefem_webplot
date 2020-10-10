@@ -65,7 +65,7 @@
                             </div>
                             <div class="form-group form-check">
                                 <label for="nbiso">Number of isovalues</label>
-                                <input type="number" class="form-control" id="nbiso" value="20">
+                                <input type="number" class="form-control" id="nbiso" value="15">
                             </div>
                             <div class="form-group form-check subcheck">
                                 <input type="checkbox" class="form-check-input" id="colorbar" checked>
@@ -90,6 +90,17 @@
                             <div class="form-group form-check">
                                 <input type="checkbox" class="form-check-input" id="wireframe">
                                 <label class="form-check-label" for="wireframe">wireframe</label>
+                            </div>
+                            <div class="form-group form-check mesh3">
+                                <input type="checkbox" class="form-check-input" id="intersec_check">
+                                <label  for="intersection">intersection</label><br>
+                                <label for="intersection_x">x</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_x">
+                                <label for="intersection_y">y</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_y">
+                                <label for="intersection_z">z</label>
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_z">
+
                             </div>
                             <h6>Set View</h6>
                             <div class="form-group form-check">
@@ -160,11 +171,11 @@
 
 </body>
 <script>
-    var mesh_data;
-    var vertex_data;
-    var edge_data;
-    var minmax_data;
-    var basic_data;
+    var mesh_data=[];
+    var vertex_data = [];
+    var edge_data = [];
+    var minmax_data = 0;
+    var basic_data = 0;
     var cmm_data;
     var pause = 1;
     var preview = 1;
@@ -176,6 +187,7 @@
     var cprofile = cprofile3;
     var now_file = 1;
     var total_file = 0;
+    var is_now_MPI = 0;
 
     function play() {
         if (pause) {
@@ -188,16 +200,49 @@
     }
 
     function reload() {
-        // basic_ajax();
         $.when(mesh_ajax(), vertex_ajax(), edge_ajax()).done(function () {
             if ($("#3dstart").text() == '2D') {
                 mydraw2d();
             } else {
-                mydraw3d();
+                if (basic_data['type'] == 'Mesh3') {
+                    mydraw3dmesh();
+                } else {
+                    mydraw3d();
+                }
             }
             $("#nowpage").text(now_file + '/' + total_file);
         })
     }
+    function mpi_reload() {
+        mesh_data = [];
+        vertex_data = [];
+        edge_data = [];
+        minmax_data = 0;
+        var promiseArr = [];
+        for (var i = 0; i < mpisize; i++) {
+            var promise = new Promise(function (resolve, reject) {
+                (function (index) {
+                    $.when(mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function(){
+                        resolve('outputIfany');
+                    })
+                })(i+1);
+            });
+            promiseArr.push(promise);
+        }
+        Promise.all(promiseArr).then(function (values) {
+            if ($("#3dstart").text() == '2D') {
+                mydraw2d();
+            } else {
+                if (basic_data['type'] == 'Mesh3') {
+                    mydraw3dmesh();
+                } else {
+                    mydraw3d();
+                }
+            }
+            $("#nowpage").text(now_file + '/' + total_file);
+        });
+    }
+    
     function mesh_ajax() {
         return $.ajax({
             url: './cache/mesh' + now_file + '.json.gz',
@@ -231,11 +276,93 @@
 
     function edge_ajax() {
         return $.ajax({
-            url: './cache/edge' + now_file + '.json.gz',
+            url: './cache/edge' + now_file +'.json.gz',
             type: 'GET'
         }).done((m) => {
             // console.log(m);
             edge_data = m.edge;
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_mesh_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/mesh' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m.mesh);
+            mesh_data = mesh_data.concat(m.mesh);
+            // console.log(mesh_data);
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_vertex_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/vertex' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            vertex_data = vertex_data.concat(m.position);
+            if (minmax_data == 0) {
+                minmax_data = m.minmax;
+            }else{
+                if (m.minmax[0]['u'] <= minmax_data[0]['u']) {
+                    minmax_data[0] = m.minmax[0];
+                }
+                if (m.minmax[1]['u'] >= minmax_data[1]['u']) {
+                    minmax_data[1] = m.minmax[1];
+                }
+            }
+            if (mpirank == 1) {
+                cmm_data = m.cmm;
+                if (cmm_data) {
+                    $("#comment").text(cmm_data);
+                }  
+            }
+            
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_edge_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/edge' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            edge_data = edge_data.concat(m.edge);
+        }).fail((xhr, status, error) => {
+            console.log("Status: " + status + " Error: " + error);
+            console.log(xhr);
+        })
+    }
+
+    function mpi_basic_ajax(mpirank) {
+        return $.ajax({
+            url: './cache/basic' + now_file + '_' + mpirank + '.json.gz',
+            type: 'GET'
+        }).done((m) => {
+            // console.log(m);
+            if (basic_data == 0) {
+                basic_data = m;
+            }else{
+                for (let i = 0; i < 2; i++) {
+                    if (m.bounds[0][i] <= basic_data.bounds[0][i]) {
+                        basic_data.bounds[0][i] = m.bounds[0][i];
+                    }
+                    if (m.bounds[1][i] >= basic_data.bounds[1][i]) {
+                        basic_data.bounds[1][i] = m.bounds[1][i];
+                    }
+                }
+                
+            }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -247,15 +374,68 @@
             url: './cache/basic' + now_file + '.json.gz',
             type: 'GET'
         }).done((m) => {
-            // console.log(m);
-            basic_data = m;
-            $("#canvas_3d").remove();
-            init();
-            animate();
-            reload();
-            if ($('#3dstart').text() == '2D') {
-                $("#canvas_3d").hide();
+            console.log(m);
+            if (m["mpi"] == "True") {
+                mpisize = m.size;
+                is_now_MPI = 1;
+                var promiseArr = [];
+                for (var i = 0; i < mpisize; i++) {
+                    var promise = new Promise(function (resolve, reject) {
+                        (function (index) {
+                            $.when(mpi_basic_ajax(index)).done(function () {
+                                resolve('outputIfany');
+                            })
+                        })(i + 1);
+                    });
+                    promiseArr.push(promise);
+                }
+                Promise.all(promiseArr).then(function (values) {
+                    if (m["type"] == "Mesh") {
+                        $("#canvas_3d").remove();
+                        init();
+                        animate();
+                        mpi_reload();
+                        if ($('#3dstart').text() == '2D') {
+                            $("#canvas_3d").hide();
+                        }
+                    } else if (m["type"] == "Mesh3") {
+                        $("#canvas_3d").remove();
+                        init();
+                        animate();
+                        mpi_reload();
+                        if ($('#3dstart').text() == '2D') {
+                            $("#canvas_3d").hide();
+                        }
+                        $('#3dstart').click();
+                    } 
+                });
+                
+
+            }else{
+                is_now_MPI = 0;
+                basic_data = m;
+                if (m["type"] == "Mesh") {
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                }else if (m["type"] == "Mesh3"){
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                    $('#3dstart').click();
+                } 
+                
+                
             }
+            
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -280,8 +460,13 @@
         if (now_file != page) {
             now_file = page;
             // basic_ajax();
-            now_file = page;
-            reload();
+            // now_file = page;
+            // basic_ajax();
+            if (is_now_MPI == 1) {
+                mpi_reload();
+            } else {
+                reload();
+            }
 
         }
     }
@@ -317,7 +502,11 @@
             if ($("#3dstart").text() == '2D') {
                 mydraw2d()
             } else {
-                mydraw3d();
+                if(basic_data['type']== 'Mesh3'){
+                    mydraw3dmesh();
+                }else{
+                    mydraw3d();
+                }
             }
         });
 
@@ -335,6 +524,8 @@
                 // disenable camera orbit control
                 controls.enabled = false;
             } else {
+                // init();
+                // animate();
                 //3D mode
                 $(this).text('3D');
                 $("#new_plot").children('svg').hide();
@@ -342,11 +533,21 @@
                 $("#canvas_3d").show();
                 $('#2d_control').hide();
                 $('#3d_control').show();
+                if (basic_data['type'] != 'Mesh3') {
+                    $('.mesh3').hide();
+                }
                 // mydraw3d();
                 // enable camera orbit control
                 controls.enabled = true;
             }
-            reload();
+            // basic_ajax();
+            if (is_now_MPI == 1) {
+                mpi_reload();
+            }else{
+                reload();
+            }
+
+            // reload();
 
 
         });
