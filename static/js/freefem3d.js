@@ -228,9 +228,9 @@ function mydraw3dmesh() {
         intersec_z = 1 * sc;
     }
     clipPlanes = [
-        new THREE.Plane(new THREE.Vector3(1, 0, 1), intersec_x),
-        new THREE.Plane(new THREE.Vector3(0, -1, 0), intersec_y),
-        new THREE.Plane(new THREE.Vector3(0, 0, -1), intersec_z)
+        new THREE.Plane(new THREE.Vector3(1, 0, 1).normalize(), intersec_x),
+        new THREE.Plane(new THREE.Vector3(0, -1, 0).normalize(), intersec_y),
+        new THREE.Plane(new THREE.Vector3(0, 0, -1).normalize(), intersec_z)
     ];
 
     c['z'] = (basic_data.bounds[1][2] + basic_data.bounds[0][2]) / 2
