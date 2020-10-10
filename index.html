@@ -233,7 +233,11 @@
             if ($("#3dstart").text() == '2D') {
                 mydraw2d();
             } else {
-                mydraw3d();
+                if (basic_data['type'] == 'Mesh3') {
+                    mydraw3dmesh();
+                } else {
+                    mydraw3d();
+                }
             }
             $("#nowpage").text(now_file + '/' + total_file);
         });
@@ -288,7 +292,7 @@
             url: './cache/mesh' + now_file + '_' + mpirank + '.json.gz',
             type: 'GET'
         }).done((m) => {
-            console.log(m.mesh);
+            // console.log(m.mesh);
             mesh_data = mesh_data.concat(m.mesh);
             // console.log(mesh_data);
         }).fail((xhr, status, error) => {
@@ -386,13 +390,24 @@
                     promiseArr.push(promise);
                 }
                 Promise.all(promiseArr).then(function (values) {
-                    $("#canvas_3d").remove();
-                    init();
-                    animate();
-                    mpi_reload();
-                    if ($('#3dstart').text() == '2D') {
-                        $("#canvas_3d").hide();
-                    }
+                    if (m["type"] == "Mesh") {
+                        $("#canvas_3d").remove();
+                        init();
+                        animate();
+                        mpi_reload();
+                        if ($('#3dstart').text() == '2D') {
+                            $("#canvas_3d").hide();
+                        }
+                    } else if (m["type"] == "Mesh3") {
+                        $("#canvas_3d").remove();
+                        init();
+                        animate();
+                        mpi_reload();
+                        if ($('#3dstart').text() == '2D') {
+                            $("#canvas_3d").hide();
+                        }
+                        $('#3dstart').click();
+                    } 
                 });
                 
 
