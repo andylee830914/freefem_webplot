@@ -353,7 +353,7 @@
             if (basic_data == 0) {
                 basic_data = m;
             }else{
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < m.bounds[0].length; i++) {
                     if (m.bounds[0][i] <= basic_data.bounds[0][i]) {
                         basic_data.bounds[0][i] = m.bounds[0][i];
                     }
