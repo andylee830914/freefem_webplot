@@ -24,13 +24,12 @@
 
 <body>
     <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
-        <a class="navbar-brand col-md-12 mr-0" href="#">
+        <a class="navbar-brand col-md-12 mr-0" href="/">
             <button class="btn btn-outline-dark btn-sm" type="button" id="mytoggle">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            FreeFEM 
+            FreeFEM
         </a>
-        
     </nav>
     <div class="container-fluid">
         <div class="row">
@@ -93,13 +92,16 @@
                             </div>
                             <div class="form-group form-check mesh3">
                                 <input type="checkbox" class="form-check-input" id="intersec_check">
-                                <label  for="intersection">intersection</label><br>
+                                <label for="intersection">intersection</label><br>
                                 <label for="intersection_x">x</label>
-                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_x">
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1"
+                                    id="intersection_x">
                                 <label for="intersection_y">y</label>
-                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_y">
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1"
+                                    id="intersection_y">
                                 <label for="intersection_z">z</label>
-                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1" id="intersection_z">
+                                <input type="range" class="custom-range" min="-1" max="1" step="0.01" value="1"
+                                    id="intersection_z">
 
                             </div>
                             <h6>Set View</h6>
@@ -151,9 +153,10 @@
                                                 <a class="page-link" href="#" onclick="play()" id="play">Play</a>
                                             </li>
                                         </ul>
-                                        
+
                                     </nav>
-                                    <button type="button" class="btn btn-outline-secondary" id="3dstart" style="margin-left: 10px;">2D</button>
+                                    <button type="button" class="btn btn-outline-secondary" id="3dstart"
+                                        style="margin-left: 10px;">2D</button>
 
                                 </ul>
                             </nav>
@@ -162,16 +165,16 @@
                     <div id="new_plot" style="text-align: center"></div>
                 </div>
                 <div class="d-flex justify-content-center mypage">
-                    
+
                 </div>
             </main>
-            
+
         </div>
     </div>
 
 </body>
 <script>
-    var mesh_data=[];
+    var mesh_data = [];
     var vertex_data = [];
     var edge_data = [];
     var minmax_data = 0;
@@ -193,7 +196,7 @@
         if (pause) {
             pause = 0;
             $("#play").text('Pause');
-        }else{
+        } else {
             pause = 1;
             $("#play").text('Play');
         }
@@ -222,10 +225,10 @@
         for (var i = 0; i < mpisize; i++) {
             var promise = new Promise(function (resolve, reject) {
                 (function (index) {
-                    $.when(mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function(){
+                    $.when(mpi_mesh_ajax(index), mpi_vertex_ajax(index), mpi_edge_ajax(index)).done(function () {
                         resolve('outputIfany');
                     })
-                })(i+1);
+                })(i + 1);
             });
             promiseArr.push(promise);
         }
@@ -242,11 +245,12 @@
             $("#nowpage").text(now_file + '/' + total_file);
         });
     }
-    
+
     function mesh_ajax() {
         return $.ajax({
             url: './cache/mesh' + now_file + '.json.gz',
-            type: 'GET'
+            cache: false,
+            type: 'GET',
         }).done((m) => {
             // console.log(m);
             mesh_data = m.mesh;
@@ -259,6 +263,7 @@
     function vertex_ajax() {
         return $.ajax({
             url: './cache/vertex' + now_file + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -276,7 +281,8 @@
 
     function edge_ajax() {
         return $.ajax({
-            url: './cache/edge' + now_file +'.json.gz',
+            url: './cache/edge' + now_file + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
             // console.log(m);
@@ -290,11 +296,10 @@
     function mpi_mesh_ajax(mpirank) {
         return $.ajax({
             url: './cache/mesh' + now_file + '_' + mpirank + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
-            // console.log(m.mesh);
-            mesh_data = mesh_data.concat(m.mesh);
-            // console.log(mesh_data);
+            Array.prototype.push.apply(mesh_data, m.mesh);
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -304,13 +309,13 @@
     function mpi_vertex_ajax(mpirank) {
         return $.ajax({
             url: './cache/vertex' + now_file + '_' + mpirank + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
-            // console.log(m);
-            vertex_data = vertex_data.concat(m.position);
+            Array.prototype.push.apply(vertex_data, m.position);
             if (minmax_data == 0) {
                 minmax_data = m.minmax;
-            }else{
+            } else {
                 if (m.minmax[0]['u'] <= minmax_data[0]['u']) {
                     minmax_data[0] = m.minmax[0];
                 }
@@ -322,9 +327,9 @@
                 cmm_data = m.cmm;
                 if (cmm_data) {
                     $("#comment").text(cmm_data);
-                }  
+                }
             }
-            
+
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -334,10 +339,10 @@
     function mpi_edge_ajax(mpirank) {
         return $.ajax({
             url: './cache/edge' + now_file + '_' + mpirank + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
-            // console.log(m);
-            edge_data = edge_data.concat(m.edge);
+            Array.prototype.push.apply(edge_data, m.edge);
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -347,12 +352,13 @@
     function mpi_basic_ajax(mpirank) {
         return $.ajax({
             url: './cache/basic' + now_file + '_' + mpirank + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
             // console.log(m);
             if (basic_data == 0) {
                 basic_data = m;
-            }else{
+            } else {
                 for (let i = 0; i < m.bounds[0].length; i++) {
                     if (m.bounds[0][i] <= basic_data.bounds[0][i]) {
                         basic_data.bounds[0][i] = m.bounds[0][i];
@@ -361,7 +367,7 @@
                         basic_data.bounds[1][i] = m.bounds[1][i];
                     }
                 }
-                
+
             }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
@@ -372,6 +378,7 @@
     function basic_ajax() {
         return $.ajax({
             url: './cache/basic' + now_file + '.json.gz',
+            cache: false,
             type: 'GET'
         }).done((m) => {
             console.log(m);
@@ -406,12 +413,12 @@
                         if ($('#3dstart').text() == '2D') {
                             $("#canvas_3d").hide();
                         }
-                        $('#3dstart').click();
-                    } 
+                        switch3d();
+                    }
                 });
-                
 
-            }else{
+
+            } else {
                 is_now_MPI = 0;
                 basic_data = m;
                 if (m["type"] == "Mesh") {
@@ -422,7 +429,7 @@
                     if ($('#3dstart').text() == '2D') {
                         $("#canvas_3d").hide();
                     }
-                }else if (m["type"] == "Mesh3"){
+                } else if (m["type"] == "Mesh3") {
                     $("#canvas_3d").remove();
                     init();
                     animate();
@@ -430,12 +437,12 @@
                     if ($('#3dstart').text() == '2D') {
                         $("#canvas_3d").hide();
                     }
-                    $('#3dstart').click();
-                } 
-                
-                
+                    switch3d();
+                }
+
+
             }
-            
+
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -445,6 +452,7 @@
     function get_picnum_ajax() {
         return $.ajax({
             url: './total_temp',
+            cache: false,
             type: 'GET'
         }).done((m) => {
             total_file = m.total;
@@ -488,8 +496,38 @@
     }
 
     function goto() {
-        var page= Number(prompt('Go to figure', now_file));
+        var page = Number(prompt('Go to figure', now_file));
         setnowpage(page);
+    }
+
+    function switch3d() {
+        if ($("#3dstart").text() == '3D') {
+            //2D mode
+            $("#3dstart").text('2D');
+            $("#canvas_3d").hide();
+            $("#new_plot").children("svg").show();
+            $('#2d_control').show();
+            $('#3d_control').hide();
+            // mydraw2d();
+            // disenable camera orbit control
+            controls.enabled = false;
+        } else {
+            // init();
+            // animate();
+            //3D mode
+            $("#3dstart").text('3D');
+            $("#new_plot").children('svg').hide();
+            $("#canvas_2d").hide();
+            $("#canvas_3d").show();
+            $('#2d_control').hide();
+            $('#3d_control').show();
+            if (basic_data['type'] != 'Mesh3') {
+                $('.mesh3').hide();
+            }
+            // mydraw3d();
+            // enable camera orbit control
+            controls.enabled = true;
+        }
     }
 
     $(document).ready(function () {
@@ -502,9 +540,9 @@
             if ($("#3dstart").text() == '2D') {
                 mydraw2d()
             } else {
-                if(basic_data['type']== 'Mesh3'){
+                if (basic_data['type'] == 'Mesh3') {
                     mydraw3dmesh();
-                }else{
+                } else {
                     mydraw3d();
                 }
             }
@@ -513,37 +551,11 @@
 
         //3d switch
         $('#3dstart').click(function () {
-            if ($("#3dstart").text() == '3D') {
-                //2D mode
-                $(this).text('2D');
-                $("#canvas_3d").hide();
-                $("#new_plot").children("svg").show();
-                $('#2d_control').show();
-                $('#3d_control').hide();
-                // mydraw2d();
-                // disenable camera orbit control
-                controls.enabled = false;
-            } else {
-                // init();
-                // animate();
-                //3D mode
-                $(this).text('3D');
-                $("#new_plot").children('svg').hide();
-                $("#canvas_2d").hide();
-                $("#canvas_3d").show();
-                $('#2d_control').hide();
-                $('#3d_control').show();
-                if (basic_data['type'] != 'Mesh3') {
-                    $('.mesh3').hide();
-                }
-                // mydraw3d();
-                // enable camera orbit control
-                controls.enabled = true;
-            }
+            switch3d();
             // basic_ajax();
             if (is_now_MPI == 1) {
                 mpi_reload();
-            }else{
+            } else {
                 reload();
             }
 
@@ -557,18 +569,18 @@
                 if ($(".sidebar").hasClass('d-none')) {
                     $(".sidebar").removeClass('d-md-block')
                     $(".dashboard").removeClass("col-md-10").addClass("col-md-12")
-                } else{
+                } else {
                     $(".sidebar").addClass('d-none')
                 }
-                
-            }else{
+
+            } else {
                 if (!$(".sidebar").hasClass('d-md-block')) {
                     $(".sidebar").addClass('d-md-block')
                     $(".dashboard").removeClass("col-md-12").addClass("col-md-10")
                 }
                 if ($(".sidebar").hasClass('d-none')) {
                     $(".sidebar").removeClass('d-none')
-                }   
+                }
             }
         })
     });
