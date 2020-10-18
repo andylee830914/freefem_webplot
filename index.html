@@ -299,7 +299,11 @@
             cache: false,
             type: 'GET'
         }).done((m) => {
-            Array.prototype.push.apply(mesh_data, m.mesh);
+            var meshori = mesh_data.length;
+            mesh_data.length = meshori + m.mesh.length;
+            for (let index = 0; index < m.mesh.length; index++) {
+                mesh_data[meshori + index] = m.mesh[index];
+            }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
@@ -312,7 +316,11 @@
             cache: false,
             type: 'GET'
         }).done((m) => {
-            Array.prototype.push.apply(vertex_data, m.position);
+            var vertexori = vertex_data.length;
+            vertex_data.length = vertexori + m.position.length;
+            for (let index = 0; index < m.position.length; index++) {
+                vertex_data[vertexori + index] = m.position[index];
+            }
             if (minmax_data == 0) {
                 minmax_data = m.minmax;
             } else {
@@ -342,7 +350,11 @@
             cache: false,
             type: 'GET'
         }).done((m) => {
-            Array.prototype.push.apply(edge_data, m.edge);
+            var edgeori = edge_data.length;
+            edge_data.length = edgeori + m.edge.length;
+            for (let index = 0; index < m.edge.length; index++) {
+                edge_data[edgeori + index] = m.edge[index];
+            }
         }).fail((xhr, status, error) => {
             console.log("Status: " + status + " Error: " + error);
             console.log(xhr);
