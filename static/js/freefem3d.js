@@ -201,7 +201,6 @@ function mydraw3d() {
 }
 
 function mydraw3dmesh() {
-    alert("start")
     scene.remove(mesh);
     scene.remove(mesh_border);
     scene.remove(axes);
