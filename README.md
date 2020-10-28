@@ -44,7 +44,7 @@ Options
 |---|---|---|---|
 |string| host | run server on the IP address | "localhost" |
 | int | port | run server on the port | 1234 |
-|string| basedir | base directory | "." |
+<!--|string| basedir | base directory | "." |-->
 
 ### MPI Insterface
 with modified `"macro_ddm.idp"` for webplot
