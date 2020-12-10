@@ -30,7 +30,7 @@
         <button class="btn btn-outline-dark btn-sm" type="button" id="mytoggle">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand col-md-12 mr-0" href="#">
+        <a class="navbar-brand col-md-12 mr-0" href="/">
             FreeFEM
         </a>
     </nav>
@@ -194,6 +194,7 @@
     var now_file = 1;
     var total_file = 0;
     var is_now_MPI = 0;
+    var refresh = 0;
 
     function play() {
         if (pause) {
@@ -397,6 +398,7 @@
             type: 'GET'
         }).done((m) => {
             console.log(m);
+            refresh = 1;
             if (m["mpi"] == "True") {
                 mpisize = m.size;
                 is_now_MPI = 1;
@@ -481,6 +483,7 @@
 
     function setnowpage(page) {
         if (now_file != page) {
+            refresh = 1;
             now_file = page;
             // basic_ajax();
             // now_file = page;
