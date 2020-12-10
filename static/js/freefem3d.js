@@ -19,7 +19,7 @@ function init() {
     max_y = basic_data.bounds[1][1] - basic_data.bounds[0][1];
     if (basic_data['type'] == "Mesh3") {
         max = 2 * Math.max(max_x, max_y);
-    } else {
+    }else{
         max = Math.max(max_x, max_y);
     }
     // max = basic_data.bounds[1][0] - basic_data.bounds[0][0];
@@ -31,32 +31,33 @@ function init() {
     frustumSize = sc + sc / 10;
     var aspect = 1;
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, 8 * frustumSize * max);
+    camera = new THREE.OrthographicCamera(frustumSize / -2 * max, frustumSize / 2 * max, frustumSize / 2 * max, frustumSize / -2 * max, 1, 8 * frustumSize *max);
     // camera = new THREE.PerspectiveCamera(frustumSize * max / 20, 1, 1, frustumSize * max);
     // camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, frustumSize * max);
-    if (basic_data['type'] == "Mesh3") {
+    if (basic_data['type']=="Mesh3") {
         camera.position.set(frustumSize, frustumSize, frustumSize);
-    } else {
+        renderer.setSize(sc, sc);
+
+    }else{
         camera.position.set(0, 0, frustumSize);
+        renderer.setSize(sc, (max_y / max_x) * sc);
+
     }
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     scene = new THREE.Scene();
     axes = new THREE.AxesHelper(frustumSize);
     axes.material.linewidth = 5;
     axes.position.set(-c.x * sc, -c.y * sc, 0); //move center
-
+    
     var theatre = document.getElementById("new_plot")
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(sc, (max_y / max_x) * sc);
     renderer.setClearAlpha(0);
     renderer.domElement.id = 'canvas_3d';
 
     theatre.appendChild(renderer.domElement);
-    scene.add(new THREE.AmbientLight(0x404040));
-    scene.add(new THREE.AmbientLight(0x404040));
-    scene.add(new THREE.AmbientLight(0x404040));
+    // scene.add(new THREE.AmbientLight(0x404040));
     scene.add(new THREE.HemisphereLight(0xffffff, 0x080820, 1));
-
+    
     renderer.localClippingEnabled = true;
 
 
@@ -171,7 +172,7 @@ function mydraw3d() {
         normals.push(normal.x, normal.y, normal.z);
 
     })
-
+ 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     geometry.computeBoundingSphere();
@@ -194,14 +195,13 @@ function mydraw3d() {
         scene.add(mesh_border);
     }
 
-    if ($("#axes3d").is(':checked')) {
+    if ($("#axes3d").is(':checked')){
         scene.add(axes);
     }
 
 }
 
 function mydraw3dmesh() {
-    scene.remove(mesh);
     scene.remove(mesh_border);
     scene.remove(axes);
     scene.remove(helpers);
@@ -209,7 +209,7 @@ function mydraw3dmesh() {
 
     const sc = 1000;
     const xc = sc;
-    const yc = sc / (max_y / max_x);
+    const yc = sc;
     const zc = sc / (max_z / max_x);
     renderer.localClippingEnabled = true;
     // const yc = sc / (max_y / max_x);
@@ -221,142 +221,235 @@ function mydraw3dmesh() {
     var intersec_y;
     var intersec_z;
     if ($("#intersec_check").is(':checked')) {
-        intersec_x = Number($("#intersection_x").val()) * sc;
-        intersec_y = Number($("#intersection_y").val()) * sc;
-        intersec_z = Number($("#intersection_z").val()) * sc;
+        intersec_x = Number($("#intersection_x").val()) * sc * max_x;
+        intersec_y = Number($("#intersection_y").val()) * sc * max_y;
+        intersec_z = Number($("#intersection_z").val()) * sc * max_z;
     } else {
         intersec_x = 1 * sc;
         intersec_y = 1 * sc;
         intersec_z = 1 * sc;
     }
     clipPlanes = [
-        new THREE.Plane(new THREE.Vector3(1, 0, 1).normalize(), intersec_x),
+        new THREE.Plane(new THREE.Vector3(1, 0, 0).normalize(), intersec_x),
         new THREE.Plane(new THREE.Vector3(0, -1, 0).normalize(), intersec_y),
         new THREE.Plane(new THREE.Vector3(0, 0, -1).normalize(), intersec_z)
     ];
 
     c['z'] = (basic_data.bounds[1][2] + basic_data.bounds[0][2]) / 2
     axes.position.set(-c.x * sc, -c.y * sc, -c.z * sc); //move center
-    var geometry = new THREE.BufferGeometry();
-    var vertices = [];
-    var normals = [];
-    var color_template = [
-        new SVG.Color(cprofile[0]).to(cprofile[1]),
-        new SVG.Color(cprofile[1]).to(cprofile[2]),
-        new SVG.Color(cprofile[2]).to(cprofile[3]),
-        new SVG.Color(cprofile[3]).to(cprofile[4])
-    ]
-    // console.log(color_template)
-    var color = new THREE.Color();
-    var colors = [];
-    var triangle = [];
-    var vn = new THREE.Vector3();
-    var vortex;
 
 
-    mesh_data.forEach((e) => {
+    if (refresh) {
+        // alert('start 3d draw\nmesh size:' + mesh_data.length);
 
-        var tempcolor = [];
-        if ((minmax_data[1].u - minmax_data[0].u) > 0) {
-            for (let index = 0; index < 4; index++) {
-                var cr = 4 * (e[index].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
-                var ci = Math.floor(cr);
-                if (ci == 4) {
-                    ci = ci - 1;
+        scene.remove(mesh);
+        
+        var geometry = new THREE.BufferGeometry();
+        var vertices = [];
+        var normals = [];
+        var color_template = [
+            new SVG.Color(cprofile[0]).to(cprofile[1]),
+            new SVG.Color(cprofile[1]).to(cprofile[2]),
+            new SVG.Color(cprofile[2]).to(cprofile[3]),
+            new SVG.Color(cprofile[3]).to(cprofile[4])
+        ]
+        // console.log(color_template)
+        var color = new THREE.Color();
+        var colors = [];
+        var triangle = [];
+        triangle.length = 4;
+
+        var vn = new THREE.Vector3();
+        var vertex = [];
+        vertices.length = mesh_data.length * 4 * 3 * 3;
+        normals.length = mesh_data.length * 4 * 3 * 3;
+        colors.length = mesh_data.length * 4 * 3 * 3;
+
+
+
+        for (let mindex = 0; mindex < mesh_data.length; mindex++) {
+            const e = mesh_data[mindex];
+        // mesh_data.forEach((e) => {
+            
+            var tempcolor = [];
+            if ((minmax_data[1].u - minmax_data[0].u) > 0) {
+                for (let index = 0; index < 4; index++) {
+                    var cr = 4 * (e[index].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
+                    var ci = Math.floor(cr);
+                    if (ci == 4) {
+                        ci = ci - 1;
+                    }
+                    tempcolor.push(color_template[ci].at(cr - ci).toHex());
+                    // color.setRGB(data[i][3] / max_kappa, 0, 0);
+                    // colors.push(color.r, color.g, color.b);
                 }
-                tempcolor.push(color_template[ci].at(cr - ci).toHex());
-                // color.setRGB(data[i][3] / max_kappa, 0, 0);
-                // colors.push(color.r, color.g, color.b);
+                
+            }
+            triangle = [];
+            vertex = [new THREE.Vector3((e[0].x - c.x) * xc, (e[0].y - c.y) * yc, (e[0].z - c.z) * zc),
+                        new THREE.Vector3((e[1].x - c.x) * xc, (e[1].y - c.y) * yc, (e[1].z - c.z) * zc),
+                        new THREE.Vector3((e[2].x - c.x) * xc, (e[2].y - c.y) * yc, (e[2].z - c.z) * zc),
+                        new THREE.Vector3((e[3].x - c.x) * xc, (e[3].y - c.y) * yc, (e[3].z - c.z) * zc)]
+            
+            triangle[0] = new THREE.Triangle(vertex[2], vertex[1], vertex[0]);
+            color.set(tempcolor[2]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 0] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 1] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 2] = color.b;
+            color.set(tempcolor[1]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 3] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 4] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 5] = color.b;
+            color.set(tempcolor[0]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 6] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 7] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 0 + 8] = color.b;
+            triangle[1] = new THREE.Triangle(vertex[0], vertex[3], vertex[2]);
+            color.set(tempcolor[0]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 0] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 1] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 2] = color.b;
+            color.set(tempcolor[3]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 3] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 4] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 5] = color.b;
+            color.set(tempcolor[2]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 6] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 7] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 1 + 8] = color.b;
+            triangle[2] = new THREE.Triangle(vertex[1], vertex[3], vertex[0]);
+            color.set(tempcolor[1]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 0] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 1] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 2] = color.b;
+            color.set(tempcolor[3]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 3] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 4] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 5] = color.b;
+            color.set(tempcolor[0]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 6] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 7] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 2 + 8] = color.b;
+            triangle[3] = new THREE.Triangle(vertex[2], vertex[3], vertex[1]);
+            color.set(tempcolor[2]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 0] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 1] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 2] = color.b;
+            color.set(tempcolor[3]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 3] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 4] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 5] = color.b;
+            color.set(tempcolor[1]);
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 6] = color.r;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 7] = color.g;
+            colors[4 * 3 * 3 * mindex + 3 * 3 * 3 + 8] = color.b;
+
+            // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
+            for (let index = 0; index < 4; index++) {
+                // triangle = new THREE.Triangle(vertex[(2 + index)%4], vertex[(1 + index)%4], vertex[(0 + index)%4]);
+                // color.set(tempcolor[2]);
+                // colors[4 * 3 * 3 * mindex + 4 * index + 0] = color.r
+                // colors[4 * 3 * 3 * mindex + 4 * index + 1] = color.g
+                // colors[4 * 3 * 3 * mindex + 4 * index + 2] = color.b;
+                // color.set(tempcolor[1]);
+                // colors[4 * 3 * 3 * mindex + 4 * index + 3] = color.r
+                // colors[4 * 3 * 3 * mindex + 4 * index + 4] = color.g
+                // colors[4 * 3 * 3 * mindex + 4 * index + 5] = color.b;
+                // color.set(tempcolor[0]);
+                // colors[4 * 3 * 3 * mindex + 4 * index + 6] = color.r
+                // colors[4 * 3 * 3 * mindex + 4 * index + 7] = color.g
+                // colors[4 * 3 * 3 * mindex + 4 * index + 8] = color.b;
+
+                triangle[index].getNormal(vn);
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 0] = triangle[index].a.x;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 1] = triangle[index].a.y;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 2] = triangle[index].a.z;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 3] = triangle[index].b.x;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 4] = triangle[index].b.y;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 5] = triangle[index].b.z;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 6] = triangle[index].c.x;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 7] = triangle[index].c.y;
+                vertices[4 * 3 * 3 * mindex + 3 * 3 * index + 8] = triangle[index].c.z;
+
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 0] = vn.x;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 1] = vn.y;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 2] = vn.z;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 3] = vn.x;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 4] = vn.y;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 5] = vn.z;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 6] = vn.x;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 7] = vn.y;
+                normals[4 * 3 * 3 * mindex + 3 * 3 * index + 8] = vn.z;
+
+                // vertices.push(triangle[index].a.x, triangle[index].a.y, triangle[index].a.z);
+                // vertices.push(triangle[index].b.x, triangle[index].b.y, triangle[index].b.z);
+                // vertices.push(triangle[index].c.x, triangle[index].c.y, triangle[index].c.z);
+                // normals.push(vn.x, vn.y, vn.z);
+                // normals.push(vn.x, vn.y, vn.z);
+                // normals.push(vn.x, vn.y, vn.z);
             }
 
+        // })
         }
+        // var material = new THREE.PointsMaterial({ size: 8, vertexColors: true });
 
-        triangle = [];
-        vortex = [new THREE.Vector3((e[0].x - c.x) * xc, (e[0].y - c.y) * yc, (e[0].z - c.z) * zc),
-        new THREE.Vector3((e[1].x - c.x) * xc, (e[1].y - c.y) * yc, (e[1].z - c.z) * zc),
-        new THREE.Vector3((e[2].x - c.x) * xc, (e[2].y - c.y) * yc, (e[2].z - c.z) * zc),
-        new THREE.Vector3((e[3].x - c.x) * xc, (e[3].y - c.y) * yc, (e[3].z - c.z) * zc)]
+        // material.needsUpdate = true
+        // itemSize = 3 because there are 3 values (components) per vertex
+        // geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        // var material = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide});
 
-        triangle.push(new THREE.Triangle(vortex[2], vortex[1], vortex[0]));
-        color.set(tempcolor[2]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[1]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[0]);
-        colors.push(color.r, color.g, color.b);
-        triangle.push(new THREE.Triangle(vortex[0], vortex[3], vortex[2]));
-        color.set(tempcolor[0]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[3]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[2]);
-        colors.push(color.r, color.g, color.b);
-        triangle.push(new THREE.Triangle(vortex[1], vortex[3], vortex[0]));
-        color.set(tempcolor[1]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[3]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[0]);
-        colors.push(color.r, color.g, color.b);
-        triangle.push(new THREE.Triangle(vortex[2], vortex[3], vortex[1]));
-        color.set(tempcolor[2]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[3]);
-        colors.push(color.r, color.g, color.b);
-        color.set(tempcolor[1]);
-        colors.push(color.r, color.g, color.b);
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-        // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
-        for (let index = 0; index < 4; index++) {
-            triangle[index].getNormal(vn);
-            vertices.push(triangle[index].a.x, triangle[index].a.y, triangle[index].a.z);
-            vertices.push(triangle[index].b.x, triangle[index].b.y, triangle[index].b.z);
-            vertices.push(triangle[index].c.x, triangle[index].c.y, triangle[index].c.z);
-            normals.push(vn.x, vn.y, vn.z);
-            normals.push(vn.x, vn.y, vn.z);
-            normals.push(vn.x, vn.y, vn.z);
-        }
+        geometry.computeBoundingSphere();
+    }
 
-    })
-
-    // var material = new THREE.PointsMaterial({ size: 8, vertexColors: true });
-
-    // material.needsUpdate = true
-    // itemSize = 3 because there are 3 values (components) per vertex
-    // geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    // var material = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide});
-
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-    geometry.computeBoundingSphere();
-
-    if ($("#intersec_check").is(':checked')) {
-        var material = new THREE.MeshPhysicalMaterial({
+    if ($("#intersec_check").is(':checked')){
+        var material = new THREE.MeshStandardMaterial({
             color: 0xf0f0f0,
+            metalness: 0.1,
+            roughness: 0.75,
             vertexColors: true, wireframe: $("#wireframe").is(':checked'),
             wireframeLinewidth: 1 / 500 * sc,
             clippingPlanes: clipPlanes,
-            clipIntersection: $("#intersec_check").is(':checked')
+            side:THREE.DoubleSide,
+            clipIntersection: $("#intersec_check").is(':checked'),
+            clipShadows:true,
+            needsUpdate:true,
+            stencilWrite: true,
+            stencilRef: 0,
+            stencilFunc: THREE.AlwaysStencilFunc,
+            stencilFail: THREE.ReplaceStencilOp,
+            stencilZFail: THREE.ReplaceStencilOp,
+            stencilZPass: THREE.ReplaceStencilOp,
         });
         helpers = new THREE.Group();
-        helpers.add(new THREE.PlaneHelper(clipPlanes[0], sc, 0xff0000));
-        helpers.add(new THREE.PlaneHelper(clipPlanes[1], sc, 0x00ff00));
-        helpers.add(new THREE.PlaneHelper(clipPlanes[2], sc, 0x0000ff));
+        helpers.add(new THREE.PlaneHelper(clipPlanes[0], sc*max/2, 0xff0000));
+        helpers.add(new THREE.PlaneHelper(clipPlanes[1], sc*max/2, 0x00ff00));
+        helpers.add(new THREE.PlaneHelper(clipPlanes[2], sc*max/2, 0x0000ff));
         helpers.visible = $("#intersec_check").is(':checked');
         scene.add(helpers);
-    } else {
-        var material = new THREE.MeshPhysicalMaterial({
+    }else{
+        var material = new THREE.MeshStandardMaterial({
             color: 0xf0f0f0,
+            metalness: 0.1,
+            roughness: 0.75,
             vertexColors: true, wireframe: $("#wireframe").is(':checked'),
             wireframeLinewidth: 1 / 500 * sc,
+            needsUpdate: true
         });
     }
+    
 
-    mesh = new THREE.Mesh(geometry, material);
-
-    scene.add(mesh);
+    if (refresh) {
+        mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        refresh = 0;
+    }else{
+        mesh.material = material;
+    }
+    
 
 
     if (!$("#wireframe").is(':checked') && $("#mesh3d").is(':checked')) {
@@ -368,9 +461,9 @@ function mydraw3dmesh() {
             clippingPlanes: clipPlanes,
             clipIntersection: $("#intersec_check").is(':checked')
         });
-        var wireframe = new THREE.WireframeGeometry(geometry);
+        var wireframe = new THREE.WireframeGeometry(mesh.geometry);
         mesh_border = new THREE.LineSegments(wireframe, material);
-        mesh_border.material.depthTest = false;
+        // mesh_border.material.depthTest = false;
         mesh_border.material.opacity = 0.25;
         mesh_border.material.transparent = true;
         scene.add(mesh_border);
