@@ -213,6 +213,8 @@
             } else {
                 if (basic_data['type'] == 'Mesh3') {
                     mydraw3dmesh();
+                }else if (basic_data['type'] == 'MeshS') {
+                    mydraw3dmeshS();
                 } else {
                     mydraw3d();
                 }
@@ -446,7 +448,16 @@
                     if ($('#3dstart').text() == '2D') {
                         $("#canvas_3d").hide();
                     }
-                } else if (m["type"] == "Mesh3") {
+                } else if (m["type"] == "Mesh3" ) {
+                    $("#canvas_3d").remove();
+                    init();
+                    animate();
+                    reload();
+                    if ($('#3dstart').text() == '2D') {
+                        $("#canvas_3d").hide();
+                    }
+                    switch3d();
+                } else if (m["type"] == "MeshS") {
                     $("#canvas_3d").remove();
                     init();
                     animate();
@@ -560,6 +571,8 @@
             } else {
                 if (basic_data['type'] == 'Mesh3') {
                     mydraw3dmesh();
+                }else if (basic_data['type'] == 'MeshS') {
+                    mydraw3dmeshS();
                 } else {
                     mydraw3d();
                 }

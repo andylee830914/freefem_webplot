@@ -210,7 +210,7 @@ function mydraw3dmesh() {
     const sc = 1000;
     const xc = sc;
     const yc = sc;
-    const zc = sc / (max_z / max_x);
+    const zc = sc;
     renderer.localClippingEnabled = true;
     // const yc = sc / (max_y / max_x);
     // var zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
@@ -460,6 +460,188 @@ function mydraw3dmesh() {
             linejoin: 'round', //ignored by WebGLRenderer
             clippingPlanes: clipPlanes,
             clipIntersection: $("#intersec_check").is(':checked')
+        });
+        var wireframe = new THREE.WireframeGeometry(mesh.geometry);
+        mesh_border = new THREE.LineSegments(wireframe, material);
+        // mesh_border.material.depthTest = false;
+        mesh_border.material.opacity = 0.25;
+        mesh_border.material.transparent = true;
+        scene.add(mesh_border);
+    }
+
+    if ($("#axes3d").is(':checked')) {
+        scene.add(axes);
+    }
+
+}
+
+function mydraw3dmeshS() {
+    scene.remove(mesh_border);
+    scene.remove(axes);
+    scene.remove(helpers);
+    max_z = basic_data.bounds[1][2] - basic_data.bounds[0][2];
+
+    const sc = 1000;
+    const xc = sc;
+    const yc = sc;
+    const zc = sc;
+    renderer.localClippingEnabled = true;
+    // const yc = sc / (max_y / max_x);
+    // var zc = sc / (3 * (minmax_data[1].u - minmax_data[0].u));
+    // if (!isFinite(zc)) {
+    //     zc = sc;
+    // }
+    var intersec_x;
+    var intersec_y;
+    var intersec_z;
+    if ($("#intersec_check").is(':checked')) {
+        intersec_x = Number($("#intersection_x").val()) * sc * max_x;
+        intersec_y = Number($("#intersection_y").val()) * sc * max_y;
+        intersec_z = Number($("#intersection_z").val()) * sc * max_z;
+    } else {
+        intersec_x = 1 * sc;
+        intersec_y = 1 * sc;
+        intersec_z = 1 * sc;
+    }
+    
+
+    c['z'] = (basic_data.bounds[1][2] + basic_data.bounds[0][2]) / 2
+    axes.position.set(-c.x * sc, -c.y * sc, -c.z * sc); //move center
+
+
+    if (refresh) {
+        // alert('start 3d draw\nmesh size:' + mesh_data.length);
+
+        scene.remove(mesh);
+
+        var geometry = new THREE.BufferGeometry();
+        var vertices = [];
+        var normals = [];
+        var color_template = [
+            new SVG.Color(cprofile[0]).to(cprofile[1]),
+            new SVG.Color(cprofile[1]).to(cprofile[2]),
+            new SVG.Color(cprofile[2]).to(cprofile[3]),
+            new SVG.Color(cprofile[3]).to(cprofile[4])
+        ]
+        // console.log(color_template)
+        var color = new THREE.Color();
+        var colors = [];
+        var triangle ;
+
+        var vn = new THREE.Vector3();
+        var vertex = [];
+        vertices.length = mesh_data.length  * 3 * 3;
+        normals.length = mesh_data.length  * 3 * 3;
+        colors.length = mesh_data.length  * 3 * 3;
+
+
+        for (let mindex = 0; mindex < mesh_data.length; mindex++) {
+            const e = mesh_data[mindex];
+            // mesh_data.forEach((e) => {
+
+            var tempcolor = [];
+            if ((minmax_data[1].u - minmax_data[0].u) > 0) {
+                for (let index = 0; index < 3; index++) {
+                    var cr = 4 * (e[index].u - minmax_data[0].u) / (minmax_data[1].u - minmax_data[0].u);
+                    var ci = Math.floor(cr);
+                    if (ci == 4) {
+                        ci = ci - 1;
+                    }
+                    tempcolor.push(color_template[ci].at(cr - ci).toHex());
+                    // color.setRGB(data[i][3] / max_kappa, 0, 0);
+                    // colors.push(color.r, color.g, color.b);
+                }
+
+            }
+
+            vertex = [new THREE.Vector3((e[0].x - c.x) * xc, (e[0].y - c.y) * yc, (e[0].z - c.z) * zc),
+            new THREE.Vector3((e[1].x - c.x) * xc, (e[1].y - c.y) * yc, (e[1].z - c.z) * zc),
+            new THREE.Vector3((e[2].x - c.x) * xc, (e[2].y - c.y) * yc, (e[2].z - c.z) * zc)]
+
+            triangle = new THREE.Triangle(vertex[2], vertex[1], vertex[0]);
+            color.set(tempcolor[2]);
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 0] = color.r;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 1] = color.g;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 2] = color.b;
+            color.set(tempcolor[1]);
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 3] = color.r;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 4] = color.g;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 5] = color.b;
+            color.set(tempcolor[0]);
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 6] = color.r;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 7] = color.g;
+            colors[3 * 3 * mindex + 3 * 3 * 0 + 8] = color.b;
+
+            // var material = new THREE.MeshLambertMaterial({wireframe: true, wireframeLinewidth: 1, side: THREE.DoubleSide });
+                triangle.getNormal(vn);
+                vertices[3 * 3 * mindex + 0] = triangle.a.x;
+                vertices[3 * 3 * mindex + 1] = triangle.a.y;
+                vertices[3 * 3 * mindex + 2] = triangle.a.z;
+                vertices[3 * 3 * mindex + 3] = triangle.b.x;
+                vertices[3 * 3 * mindex + 4] = triangle.b.y;
+                vertices[3 * 3 * mindex + 5] = triangle.b.z;
+                vertices[3 * 3 * mindex + 6] = triangle.c.x;
+                vertices[3 * 3 * mindex + 7] = triangle.c.y;
+                vertices[3 * 3 * mindex + 8] = triangle.c.z;
+
+                normals[3 * 3 * mindex + 0] = vn.x;
+                normals[3 * 3 * mindex + 1] = vn.y;
+                normals[3 * 3 * mindex + 2] = vn.z;
+                normals[3 * 3 * mindex + 3] = vn.x;
+                normals[3 * 3 * mindex + 4] = vn.y;
+                normals[3 * 3 * mindex + 5] = vn.z;
+                normals[3 * 3 * mindex + 6] = vn.x;
+                normals[3 * 3 * mindex + 7] = vn.y;
+                normals[3 * 3 * mindex + 8] = vn.z;
+            
+        } 
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        geometry.computeBoundingSphere();
+    }
+
+    if ($("#intersec_check").is(':checked')) {
+        var material = new THREE.MeshStandardMaterial({
+            color: 0xf0f0f0,
+            metalness: 0.1,
+            roughness: 0.75,
+            vertexColors: true, wireframe: $("#wireframe").is(':checked'),
+            wireframeLinewidth: 1 / 500 * sc,
+            clippingPlanes: clipPlanes,
+            needsUpdate: true,
+        });
+        
+    } else {
+        var material = new THREE.MeshStandardMaterial({
+            color: 0xf0f0f0,
+            metalness: 0.1,
+            roughness: 0.75,
+            vertexColors: true, wireframe: $("#wireframe").is(':checked'),
+            wireframeLinewidth: 1 / 500 * sc,
+            needsUpdate: true
+        });
+    }
+
+
+    if (refresh) {
+        mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        refresh = 0;
+    } else {
+        mesh.material = material;
+    }
+
+
+
+    if (!$("#wireframe").is(':checked') && $("#mesh3d").is(':checked')) {
+        var material = new THREE.LineBasicMaterial({
+            color: 0x000000,
+            linewidth: 1,
+            linecap: 'round', //ignored by WebGLRenderer
+            linejoin: 'round', //ignored by WebGLRenderer
+            side: THREE.DoubleSide,
         });
         var wireframe = new THREE.WireframeGeometry(mesh.geometry);
         mesh_border = new THREE.LineSegments(wireframe, material);
