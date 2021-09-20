@@ -1532,6 +1532,7 @@ inline void read_file(const std::string &path, std::string &out) {
   fs.seekg(0);
   out.resize(static_cast<size_t>(size));
   fs.read(&out[0], static_cast<std::streamsize>(size));
+  std::cout << out << std::endl;
 }
 
 inline std::string file_extension(const std::string &path) {

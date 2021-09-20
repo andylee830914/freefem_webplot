@@ -1,4 +1,4 @@
-webplot.dylib
+*.dylib
 *.o
 *.edp
 *.msh
