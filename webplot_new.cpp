@@ -71,6 +71,7 @@ void signalHandler(int signum)
 }
 
 
+// Url router
 static void cb(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
   if (ev == MG_EV_HTTP_MSG) {
     struct mg_http_message *hm = (struct mg_http_message *) ev_data;
@@ -89,23 +90,27 @@ static void cb(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
         const char* filename;
         filename = hm->uri.ptr;
         std::string s(filename);
-        std::string token = "." + s.substr(0, s.find("?"));
-        // cout<< token <<endl;
-        std::string bodystr;
-        std::ifstream fs(token, std::ios_base::binary);
-        fs.seekg(0, std::ios_base::end);
-        auto size = fs.tellg();
-        fs.seekg(0);
-        bodystr.resize(static_cast<size_t>(size));
-        fs.read(&bodystr[0], static_cast<std::streamsize>(size));
-        std::string header = "Content-Type: application/json\r\nContent-Encoding: gzip\r\nCache-Control: no-cache\r\n";
-        mg_http_reply_wcl(c, 200,"OK", header.c_str(), bodystr.data(),bodystr.size());
+        std::string path = "." + s.substr(0, s.find("?"));
+
+        std::ifstream fs(path, std::ios_base::binary);
+        // create gzip http respond
+        if (fs.good()){
+            std::string bodystr;
+            fs.seekg(0, std::ios_base::end);
+            auto size = fs.tellg();
+            fs.seekg(0);
+            bodystr.resize(static_cast<size_t>(size));
+            fs.read(&bodystr[0], static_cast<std::streamsize>(size));
+            std::string header = "Content-Type: application/json\r\nContent-Encoding: gzip\r\nCache-Control: no-cache\r\n";
+            mg_http_reply_wcl(c, 200,"OK", header.c_str(), bodystr.data(),bodystr.size());
+        }else{
+            // file not found
+            mg_printf(c, "%s", "HTTP/1.1 404 File Not Found\r\nContent-Length: 0\r\n\r\n");
+
+        }
     }else{
         struct mg_http_serve_opts opts = {.root_dir = s_root_dir};
         mg_http_serve_dir(c, (struct mg_http_message *)ev_data, &opts);
-        
-      
-      
     }
   }
 }
@@ -312,9 +317,9 @@ AnyType SERVER_Op::operator()(Stack stack) const
     std::ostringstream static_path;
     static_path << base << "/static";
 
-    
+    std::string listen = "http://"+host+":"+std::to_string(port);
     mg_mgr_init(&mgr);
-    mg_http_listen(&mgr, "http://localhost:8081", cb, NULL);
+    mg_http_listen(&mgr, listen.c_str(), cb, NULL);
     // std::async();
     // auto a1 = std::async(server_listen);
     // pthread_create(&myPthread, NULL, server_listen, NULL);
