@@ -196,6 +196,8 @@
     var is_now_MPI = 0;
     var refresh = 0;
 
+    var url = new URL(window.location.href);
+
     function play() {
         if (pause) {
             pause = 0;
@@ -424,6 +426,12 @@
                         if ($('#3dstart').text() == '2D') {
                             $("#canvas_3d").hide();
                         }
+                        var query_view = url.searchParams.get("v");
+                        if (query_view !== null) {
+                            if (query_view == "3d") {
+                                switch3d();
+                            }
+                        }
                     } else if (m["type"] == "Mesh3") {
                         $("#canvas_3d").remove();
                         init();
@@ -434,6 +442,7 @@
                         }
                         switch3d();
                     }
+                    
                 });
 
 
@@ -447,6 +456,12 @@
                     reload();
                     if ($('#3dstart').text() == '2D') {
                         $("#canvas_3d").hide();
+                    }
+                    var query_view = url.searchParams.get("v");
+                    if (query_view !== null) {
+                        if (query_view == "3d") {
+                            switch3d();
+                        }
                     }
                 } else if (m["type"] == "Mesh3" ) {
                     $("#canvas_3d").remove();
@@ -493,12 +508,11 @@
     }
 
     function setnowpage(page) {
-        if (now_file != page) {
+        if (now_file !== page) {
             refresh = 1;
             now_file = page;
-            // basic_ajax();
-            // now_file = page;
-            // basic_ajax();
+            url.searchParams.set('p', page);
+            window.history.replaceState(null, null, url);
             if (is_now_MPI == 1) {
                 mpi_reload();
             } else {
@@ -540,6 +554,7 @@
             // mydraw2d();
             // disenable camera orbit control
             controls.enabled = false;
+            url.searchParams.set('v', "2d");
         } else {
             // init();
             // animate();
@@ -556,10 +571,20 @@
             // mydraw3d();
             // enable camera orbit control
             controls.enabled = true;
+            url.searchParams.set('v', "3d");
+
         }
+        window.history.replaceState(null, null, url)
+
     }
 
     $(document).ready(function () {
+        var params = new URLSearchParams(url.search.slice(1));
+        var query_page = params.get("p");
+        
+        if (query_page !== null){
+            setnowpage(parseInt(query_page,10));
+        }
         basic_ajax();
         get_picnum_ajax();
 
@@ -579,6 +604,7 @@
             }
         });
 
+        
 
         //3d switch
         $('#3dstart').click(function () {
@@ -589,12 +615,9 @@
             } else {
                 reload();
             }
-
             // reload();
-
-
         });
-
+        
         $("#mytoggle").click(function () {
             if ($("#control").is(":visible")) {
                 if ($(".sidebar").hasClass('d-none')) {

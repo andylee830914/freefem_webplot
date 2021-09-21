@@ -1,5 +1,6 @@
 load "webplot_new"
-server();
+// server();
+server(host="0.0.0.0",port=8080);
 
 border ba(t=0,1.0) { x=t;   y=0;   label=1; };
 border bb(t=0,0.5) { x=1;   y=t;   label=1; };
@@ -26,6 +27,6 @@ Vh0 u0 = u;
 webplot(Th);
 webplot(u,Th);
 webplot(u0,Th);
-// server(host="0.0.0.0",port=8080);
+
 // server();
 show();
