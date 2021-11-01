@@ -6,13 +6,14 @@ Demo : [https://freefem.andylee.tw](https://freefem.andylee.tw)
 ## Usage
 ### Compile
 ```
-ff-c++ webplot.cpp
+ff-c++ mongoose.c webplot.cpp -lz
 ```
 ### Use in FreeFEM
 ```
 load "webplot"
-webplot(u,Th);
 server();
+webplot(u,Th);
+show();
 ```
 ### Function Usage
 #### `webplot()`
