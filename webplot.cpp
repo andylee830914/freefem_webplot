@@ -1,10 +1,13 @@
-#include "httplib.h"
+#include "mongoose.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <csignal>
 #include <filesystem>
+#include <thread>
 #include <zlib.h>
+// #include <pthread.h>
+#include <thread>
 #ifndef WITH_NO_INIT
 #include "ff++.hpp"
 #include "AFunction.hpp"
@@ -13,18 +16,33 @@
 using namespace std;
 using namespace std::__fs::filesystem;
 using namespace Fem2D;
-using namespace httplib;
 
-Server svr;
+void mg_http_reply_wcl(struct mg_connection *c, int code,const char *status, const char *headers,
+                   const char *fmt, int len ...) {
+  mg_printf(c, "HTTP/1.1 %d %s\r\n%sContent-Length: %d\r\n\r\n", code,
+            status, headers == NULL ? "" : headers, len);
+  mg_send(c, fmt, len);
+}
 
 namespace{
+    struct mg_mgr mgr;
+    // pthread_t myPthread;
+    std::shared_ptr<std::thread> mythread;
     const char DEFAULT_FETYPE[] = "P1";
     const char DEFAULT_CMM[] = "";
     const char DEFAULT_HOST[] = "localhost";
     const double DEFAULT_PORT = 1234;
     const char BASE_DIR[] =  ".";
+    static const char *s_root_dir = ".";
     int plotcount = 0;
+
 }
+
+void server_listen(){
+    for (;;) mg_mgr_poll(&mgr, 50);
+    // pthread_exit(NULL);
+}
+
 
 std::string get_string(Stack stack, Expression e, const char *const DEFAULT)
 {
@@ -48,8 +66,53 @@ void signalHandler(int signum)
     {
         remove(entry.path());
     }
-    svr.stop();
+    mg_mgr_free(&mgr);
     exit(signum);
+}
+
+
+// Url router
+static void cb(struct mg_connection *c, int ev, void *ev_data, void *fn_data) {
+  if (ev == MG_EV_HTTP_MSG) {
+    struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+    
+    if (mg_http_match_uri(hm, "/api/#")) {
+      // All URIs starting with /api/ must be authenticated
+      mg_printf(c, "%s", "HTTP/1.1 403 Denied\r\nContent-Length: 0\r\n\r\n");
+    } else if (mg_http_match_uri(hm, "/total_temp")) {
+        stringstream json;
+        json << "{ \"total\" : " << plotcount << " }" << endl;
+        const char* jsonstr;
+        jsonstr = json.str().c_str();
+        mg_http_reply(c, 200, "Content-Type: application/json\r\n", jsonstr);
+        
+    } else if(mg_http_match_uri(hm, "/static/cache/#")){
+        const char* filename;
+        filename = hm->uri.ptr;
+        std::string s(filename);
+        std::string path = "." + s.substr(0, s.find("?"));
+
+        std::ifstream fs(path, std::ios_base::binary);
+        // create gzip http respond
+        if (fs.good()){
+            std::string bodystr;
+            fs.seekg(0, std::ios_base::end);
+            auto size = fs.tellg();
+            fs.seekg(0);
+            bodystr.resize(static_cast<size_t>(size));
+            fs.read(&bodystr[0], static_cast<std::streamsize>(size));
+            std::string header = "Content-Type: application/json\r\nContent-Encoding: gzip\r\nCache-Control: no-cache\r\n";
+            mg_http_reply_wcl(c, 200,"OK", header.c_str(), bodystr.data(),bodystr.size());
+        }else{
+            // file not found
+            mg_printf(c, "%s", "HTTP/1.1 404 File Not Found\r\nContent-Length: 0\r\n\r\n");
+
+        }
+    }else{
+        struct mg_http_serve_opts opts = {.root_dir = s_root_dir};
+        mg_http_serve_dir(c, (struct mg_http_message *)ev_data, &opts);
+    }
+  }
 }
 
 class SERVER_Op : public E_F0
@@ -67,6 +130,27 @@ class SERVER_Op : public E_F0
 
   public:
     SERVER_Op(const basicAC_F0 &args)
+    {
+        args.SetNameParam(n_name_param, name_param, nargs);
+    }
+    AnyType operator()(Stack stack) const;
+};
+
+class SERVERSHOW_Op : public E_F0
+{
+  public:
+    static const int n_name_param = 3;
+    static basicAC_F0::name_and_type name_param[];
+    Expression nargs[n_name_param];
+
+    // int arg(int i, Stack stack, int defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    double arg(int i, Stack stack, double defvalue) const { return nargs[i] ? GetAny<double>((*nargs[i])(stack)) : defvalue; }
+    long arg(int i, Stack stack, long defvalue) const { return nargs[i] ? GetAny<long>((*nargs[i])(stack)) : defvalue; }
+    KN<double> *arg(int i, Stack stack, KN<double> *defvalue) const { return nargs[i] ? GetAny<KN<double> *>((*nargs[i])(stack)) : defvalue; }
+    bool arg(int i, Stack stack, bool defvalue) const { return nargs[i] ? GetAny<bool>((*nargs[i])(stack)) : defvalue; }
+
+  public:
+    SERVERSHOW_Op(const basicAC_F0 &args)
     {
         args.SetNameParam(n_name_param, name_param, nargs);
     }
@@ -221,6 +305,8 @@ class WEBSPLOT_Op : public E_F0mps
     AnyType operator()(Stack stack) const;
 };
 
+
+
 AnyType SERVER_Op::operator()(Stack stack) const
 {
 
@@ -230,45 +316,25 @@ AnyType SERVER_Op::operator()(Stack stack) const
 
     std::ostringstream static_path;
     static_path << base << "/static";
-    svr.set_base_dir(static_path.str().c_str());
 
-    svr.set_file_request_handler([&](const Request &req, Response &res) {
-        if (req.path.find(".json.gz") != string::npos)
-        {
-            res.set_header("Content-Encoding", "gzip");
-            res.set_header("Content-Type", "application/json");
-            res.set_header("Cache-Control", "no-cache");
-        }
-        else
-        {
-            res.set_header("Cache-Control", "public");
-        }
-          
-    });
-
-    svr.Get("/", [base](const Request &req, Response &res) {
-        std::ostringstream path;
-        path << base << "/index.html";
-        ifstream ifs(path.str().c_str());
-        std::string hp_html((std::istreambuf_iterator<char>(ifs)),
-                            std::istreambuf_iterator<char>());
-        res.set_content(hp_html, "text/html");
-    });
-
-    svr.Get("/total_temp", [](const Request &req, Response &res) {
-        stringstream json;
-        json << "{ \"total\" :" << plotcount << "}" << endl;
-        string jsonstr;
-        jsonstr = json.str();
-        res.set_content(jsonstr, "application/json");
-    });
-
-    cout << endl;
-    cout << "Starting server at http://"<< host <<":"<< port <<"/" << endl;
-    cout << "Quit the server with CONTROL-C." << endl;
+    std::string listen = "http://"+host+":"+std::to_string(port);
+    mg_mgr_init(&mgr);
+    mg_http_listen(&mgr, listen.c_str(), cb, NULL);
+    // std::async();
+    // auto a1 = std::async(server_listen);
+    // pthread_create(&myPthread, NULL, server_listen, NULL);
+    mythread = std::make_shared<std::thread>(server_listen);
     signal(SIGINT, signalHandler);
-    svr.listen(host.c_str(), port);
 
+    return 0.0;
+}
+
+AnyType SERVERSHOW_Op::operator()(Stack stack) const
+{
+
+    // int a =0;
+    // pthread_join(myPthread, (void **)&a);
+    mythread->join();
     return 0.0;
 }
 
@@ -322,6 +388,15 @@ basicAC_F0::name_and_type SERVER_Op::name_param[] =
         {"basedir", &typeid(string *)}
         //{  "logscale",  &typeid(bool)} // not implemented
 };
+basicAC_F0::name_and_type SERVERSHOW_Op::name_param[] =
+    {
+        // modify static const int n_name_param = ... in the above member
+        {"host", &typeid(string *)},
+        {"port", &typeid(double)},
+        {"basedir", &typeid(string *)}
+        //{  "logscale",  &typeid(bool)} // not implemented
+};
+
 
 
 AnyType WEBPLOT_Op::operator()(Stack stack) const
@@ -1374,11 +1449,14 @@ class SERVER : public OneOperator
 
   public:
     SERVER()    : OneOperator(atype<double>()), argc(0) {}
+    SERVER(int)    : OneOperator(atype<double>()), argc(1) {}
 
     E_F0 *code(const basicAC_F0 &args) const
     {
         if (argc == 0)
             return new SERVER_Op(args);
+        else if (argc == 1)
+            return new SERVERSHOW_Op(args);
         else
             ffassert(0);
     }
@@ -1387,6 +1465,7 @@ class SERVER : public OneOperator
 
 static void init(){
     Global.Add("server", "(", new SERVER());
+    Global.Add("show", "(", new SERVER(0));
     Global.Add("webplot", "(", new WEBPLOT());
     Global.Add("webplot", "(", new WEBPLOT(0));
     Global.Add("webplotMPI", "(", new WEBMPIPLOT());

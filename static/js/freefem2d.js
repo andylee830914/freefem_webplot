@@ -27,9 +27,22 @@ $('#2dpng').click(function () {
 
 });
 
+$('#2dpdf').click(function (e) {
+    preview = 0;
+    mydraw2d();
+    var text = draw.svg();
+    svgToPdf(text);
+    // var file = new Blob([text], { type: 'image/svg+xml' });
+    // var url = URL.createObjectURL(file);
+    // var w = window.open(url, 'test.svg');
+    // this.download = 'output-' + now_file + '.svg';
+    // this.href = url;
+    preview = 1;
+});
+
 // 2D Draw
 function mydraw2d() {
-
+    var before = performance.now();
     var max_x = basic_data.bounds[1][0] - basic_data.bounds[0][0];
     var max_y = basic_data.bounds[1][1] - basic_data.bounds[0][1];
     var max = Math.max(max_x, max_y);
@@ -233,11 +246,14 @@ function mydraw2d() {
     }
 
 
-
+    var after = performance.now();
+    console.log("mydraw2d: " + (after - before) + "ms to execute.");
 }
 
 
 function mydraw2d_canvas() {
+    var before = performance.now();
+
     var max_x = basic_data.bounds[1][0] - basic_data.bounds[0][0];
     var max_y = basic_data.bounds[1][1] - basic_data.bounds[0][1];
     // var max = Math.max(max_x, max_y);
@@ -455,4 +471,31 @@ function mydraw2d_canvas() {
 
         }
     }
+    var after = performance.now();
+    console.log("mydraw2d canvas: " + (after - before) + "ms to execute.");
+}
+
+
+function svgToPdf(svg) {
+    const doc = new window.PDFDocument();
+    const chunks = [];
+    const stream = doc.pipe({
+        // writable stream implementation
+        write: (chunk) => chunks.push(chunk),
+        end: () => {
+            const pdfBlob = new Blob(chunks, {
+                type: 'application/octet-stream'
+            });
+            var w1 = window.open("", 'output.pdf'); // to prevent browser block popup window
+            var url = URL.createObjectURL(pdfBlob);
+            w1.location.href = url;
+        },
+        on: (event, action) => { },
+        once: (...args) => { },
+        emit: (...args) => { },
+    });
+
+    window.SVGtoPDF(doc, svg, 0, 0);
+
+    doc.end();
 }

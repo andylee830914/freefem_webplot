@@ -59,6 +59,13 @@ if(!NoGraphicWindow || usedARGV("-fglut") != -1) {
     }
 }//
 
+macro showMPI(params)
+if(!NoGraphicWindow || usedARGV("-fglut") != -1) {
+    if(mpirank == 0) {
+        show(params);
+    }
+}//
+
 macro plotDmesh(Th, params)
 if(!NoGraphicWindow || usedARGV("-fglut") != -1) {
     fespace PhPlotPrivate(Th, P0);
